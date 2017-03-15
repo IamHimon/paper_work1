@@ -1,73 +1,27 @@
 import tensorflow as tf
 
 
-class TextCNN(object):
-    def __init__(self, whether_word2vec, whether_tf, vocab_size, embedding_dim, sequence_length, tf_dict_size, tf_emb_size, num_classes, filter_sizes,
+class TextCNN_ONEHOT(object):
+    def __init__(self, vocab_size, embedding_dim, sequence_length, num_classes, filter_sizes,
                  num_filters, l2_reg_lambda=0.0):
-        print("textCNN init ", whether_word2vec)
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)
-
-        # sum_dim = embedding_dim + tf_emb_size * 3
-        sum_dim = 0
+        sum_dim = embedding_dim
 
         # placeholder for input,output and dropout, wait for feed_dict
-        if whether_tf:
-            self.t_tf = tf.placeholder(tf.int32, [None, sequence_length], name='t_tf')
-            self.a_tf = tf.placeholder(tf.int32, [None, sequence_length], name='a_tf')
-            self.j_tf = tf.placeholder(tf.int32, [None, sequence_length], name='j_tf')
         self.input_x = tf.placeholder(tf.int32, [None, sequence_length], name="input_x")
         self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
         # embedding layer
         with tf.device('/cpu:0'), tf.name_scope("embedding"):
-            # 根据标志whether_word2vec来选择两种方式
-            if whether_word2vec:
-                print('word2vec')
-                # 直接用word2vec训练好的词向量,令trainable=False,
-                word2vec = tf.Variable(tf.constant(0.0, shape=[vocab_size, embedding_dim]), trainable=False, name="word2vec")
-                self.word_placeholder = tf.placeholder(tf.float32, [vocab_size, embedding_dim], name="word_placeholder")
-                self.embedding_init = word2vec.assign(self.word_placeholder)
-                sum_dim += embedding_dim
-
-            else:
-                print('not word2vec')
-                # 如果不用事先训练好的word2vec词向量,就需要随机初始化来构造一个词向量.
-                # initialize these using a random uniform distribution
-                word2vec = tf.Variable(tf.random_uniform([vocab_size, embedding_dim], -1, +1), name="word2vec")
+            # initialize these using a random uniform distribution
+            word2vec = tf.Variable(tf.random_uniform([vocab_size, embedding_dim], -1, +1), name="word2vec")
             # embedding_lookup() creates the actual embedding operation
             # aim shape: [None, seq_len, embedding_size, 1]
-            w_emb = tf.nn.embedding_lookup(word2vec, self.input_x)
-            self.X = w_emb
+            self.w_emb = tf.nn.embedding_lookup(word2vec, self.input_x)
 
-            if whether_tf:
-                print('TF')
-                ini_tf_emb = tf.Variable(tf.random_uniform([tf_dict_size, tf_emb_size], -1.0, +1.0), 'tf_vec')
-                t_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.t_tf)
-                a_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.a_tf)
-                j_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.j_tf)
-                self.X = tf.concat(2, [self.X, t_tf_emb, a_tf_emb, j_tf_emb])   # 更新X
-                sum_dim += tf_emb_size * 3  # 更新sum dimension
-
-            # 直接用word2vec训练好的词向量,令trainable=False,
-            # word2vec = tf.Variable(tf.constant(0.0, shape=[vocab_size, embedding_dim]), trainable=False, name="word2vec")
-            # self.word_placeholder = tf.placeholder(tf.float32, [vocab_size, embedding_dim], name="word_placeholder")
-            # self.embedding_init = word2vec.assign(self.word_placeholder)
-
-            # initialize tf_dic using a random uniform distribution
-            # ini_tf_emb = tf.Variable(tf.random_uniform([tf_dict_size, tf_emb_size], -1.0, +1.0))
-
-            # embedding_lookup() creates the actual embedding operation,三个特征值用同一个词典
-            # aim shape: [None, seq_len, embedding_size, 1]
-            # t_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.t_tf)
-            # a_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.a_tf)
-            # j_tf_emb = tf.nn.embedding_lookup(ini_tf_emb, self.j_tf)
-
-            # w_emb = tf.nn.embedding_lookup(word2vec, self.input_x)
-
-            # self.X = tf.concat(2, [w_emb, t_tf_emb, a_tf_emb, j_tf_emb])
-            self.X_expanded = tf.expand_dims(self.X, -1)
+            self.X_expanded = tf.expand_dims(self.w_emb, -1)
         # convolution and max-polling layers
         pooled_outputs = []
         for i, filter_size in enumerate(filter_sizes):

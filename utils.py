@@ -3,6 +3,7 @@ from load_word2vec import *
 import time,datetime
 import re
 
+
 # 单独加载journal,因为训练集中journal的样例太少了
 def load_all_journals():
     fp = open('v3/all_journal_1614_.txt', 'r')
@@ -87,10 +88,21 @@ def makePaddedList(maxl, sent_contents, pad_symbol='<p>'):
     return T
 
 
+def makePaddedList_index(maxl, sent_contents, pad_symbol):
+    T = []
+    for sent in sent_contents:
+        t = []
+        lenth = len(sent)
+        for i in range(lenth):
+            t.append(sent[i])
+        for i in range(lenth, maxl):
+            t.append(pad_symbol)
+        T.append(t)
+    return T
+
+
 # longer-trim, shorter-padding
-def makePaddedList2(maxl, sent_contents, pad_symbol='<p>'):
-    # maxl = max([len(sent) for sent in sent_contents])
-    # print("padding maxl:", maxl)
+def makePaddedList2(maxl, sent_contents, pad_symbol):
     T = []
     for sent in sent_contents:
         t = []
@@ -209,13 +221,26 @@ def index_sample(sample, vocab, max_length):
     return inner_index_list
 
 
-# 对预测结果的loss,计算出各类得分的最大值
-def get_max_score(loss):
-    m1 = 0
-    m2 = 0
-    m3 = 0
-    arr = np.array(loss)
-    arr.max()
+def sample2index_matrix2(samples, vocab):
+    outer_index_list = []
+
+    for sample in samples:
+        outer_index_list.append(index_sample2(sample, vocab))
+    return outer_index_list
+
+
+def index_sample2(sample, vocab):
+    inner_index_list = []
+    for word in sample:
+        index = np.where(vocab == word)
+        if len(index[0]) != 0:
+            i = index[0][0]
+        else:
+            i = 1   # vocab 中没有的就设定为<p>
+        inner_index_list.append(i)
+        if word == '<p>':
+            break
+    return inner_index_list
 
 
 def load_journal4test(journal_path):
@@ -316,7 +341,7 @@ def revise_predictions(predictions, loss):
     max_temp = -10000
     max_index = 0
     if len(t_index[0]) > 1:
-        print('more title,error!')
+        # print('more title,error!')
         for i in t_index[0]:
             if max_temp < loss[i][0]:
                 max_temp = loss[i][0]
@@ -329,9 +354,9 @@ def revise_predictions(predictions, loss):
     j_index = np.where(predictions == 2)
     # print(j_index)
     if len(j_index[0]) > 1:
-        print('more journal,error!')
+        # print('more journal,error!')
         for i in j_index[0]:
-            print(i)
+            # print(i)
             if max_temp < loss[i][2]:
                 max_temp = loss[i][2]
                 max_index = i
@@ -339,23 +364,171 @@ def revise_predictions(predictions, loss):
             if i != max_index:
                 predictions[i] = 1
         # print('title max index:', max_index)
-    print("after revise:", predictions)
+    # print("after revise:", predictions)
     return predictions
 
 
+# judge if string is more numeric or text
+def n_or_t(block):
+    reobj = re.compile('\d')
+    results = reobj.findall(block)
+    num_ratio = len(results)/len(block)
+    # "page 1-9",这应该是number占比最小的情况了
+    if num_ratio >= 0.25:
+        token = 'n'
+    else:
+        token = 't'
+    return token
+
+
 def read_test_data(file_path):
-    predictions = []
+    samples = []
+    labels = []
     read = open(file_path, 'r')
     lines = read.readlines()
+    # print(len(lines))
     for line in lines:
         if re.match(r'\[', line):
-            predictions = [x for x in eval(line)]
+            label = [x for x in eval(line)]
+            labels.append(label)
         else:
-            print(line)
+            samples.append(line)
+    return samples, labels
+
+
+# match numeric block and return the corresponding label:year-3,page-5,volume-4,
+# if match failed return 6
+def match_regex(block):
+    label = 6
+    year_regex1 = r'.*([1-2][0-9]{3})'  # '2014
+    year_regex2 = r'.*(\([1-2][0-9]{3}\))'  # '(2014)'
+    year_regex = "|".join([year_regex2, year_regex1])
+    year_match_result = re.match(year_regex, block)
+
+    page_regex1 = r'.*([0-9]+\-[0-9]+$)'
+    page_regex2 = r'.*([0-9]+.\-.[0-9]+$)'
+    page_regex3 = r'.*(pages.[0-9]+.\-.[0-9]+$)'
+    page_regex4 = r'.*(pp.[0-9]+.\-.[0-9]+$)'
+    page_regex = "|".join([page_regex1, page_regex2, page_regex3, page_regex4])
+    page_match_result = re.match(page_regex, block)
+
+    volume_regex = r'.[0-9]+\([0-9]+\)'
+    volume_match_result = re.match(volume_regex, block)
+
+    if year_match_result:
+        label = 3
+    elif page_match_result:
+        label = 5
+    elif volume_match_result:
+        label = 4
+    return label
+
+
+def label_numeric(x_numeric):
+    numeric_predictions = []
+    for block in x_numeric:
+        numeric_predictions.append(match_regex(block))
+    return numeric_predictions
+
+
+def fixed_length_list(num):
+    lis = []
+    for i in range(num):
+        lis.append([])
+    return lis
+
+
+def same_elem_count(l1, l2):
+    return len([i for i in l1 if i in l2])
+
+
+# merge tow predictions
+def merge_predictions(t_predictions, t_index, n_predictions, n_index):
+    max_length = len(t_predictions) + len(n_predictions)
+    predictions = fixed_length_list(max_length)
+    c = 0
+    for t_i in t_index:
+        predictions[t_i] = t_predictions[c]
+        c += 1
+    d = 0
+    for n_i in n_index:
+        predictions[n_i] = n_predictions[d]
+        d += 1
+    return predictions
+
+
+def build_y_train_publication(titles_contents, authors_contents, journals_contents):
+    print("Building label dict:")
+    titles_length = len(titles_contents)
+    authors_length = len(authors_contents)
+    journals_length = len(journals_contents)
+    t_list = ['T' for i in range(titles_length)]
+    a_list = ['A' for a in range(authors_length)]
+    j_list = ['J' for j in range(journals_length)]
+    label_list = t_list + a_list + j_list
+    label_dict = {'T': 0, 'A': 1, 'J': 2}
+    label_dict_size = len(label_dict)
+
+    print("Preparing y_train:")
+    y_t = mapLabelToId(label_list, label_dict)
+    y_train = np.zeros((len(y_t), label_dict_size))
+    for i in range(len(y_t)):
+        y_train[i][y_t[i]] = 1
+    print("Preparing y_train over!")
+    return y_train, label_dict_size
+
 
 if __name__ == '__main__':
-    print('main')
-    read_test_data('data/temp_ada')
+    j = load_all_journals()
+    print(j)
+    # print('main')
+    # samples, labels = read_test_data('data/temp_ada.txt')
+    # for i in range(len(samples)):
+    #     print('x:', samples[i])
+    #     print('y:', labels[i])
+
+    # print(len(samples))
+    # print(len(predictions))
+    # print(samples[10])
+    # print(labels[10])
+    # for i in labels[10]:
+    #     print(i)
+    # x = [0, 0, 1, 1, 1, 2, 2, 5, 3]
+    # y = [0, 1, 1, 1, 1, 1, 2, 5, 3]
+    #
+    # a = float(same_elem_count(x, y))
+    # print(a)
+
+    # try:
+    #     x_raw = samples[10].strip().split(',')
+    #     print(x_raw)
+    #     x_numeric = []
+    #     x_text = []
+    #     numeric_index = []
+    #     text_index = []
+    #     for x in x_raw:
+    #         token = n_or_t(x)
+    #         if token == 't':
+    #             x_text.append(x)
+    #             text_index.append(x_raw.index(x))
+    #         if token == 'n':
+    #             x_numeric.append(x)
+    #             numeric_index.append(x_raw.index(x))
+    #
+    #     # x_text send into CNN model , got loss and predictions
+    #     text_predictions = [0, 1, 1, 1, 1, 1, 2]
+    #     # text_predictions = revise_predictions(predictions, loss)
+    #
+    #     num_predictions = label_numeric(x_numeric)
+    #     print(num_predictions)
+    #
+    #
+    #
+    #     # input_x = [x.split() for x in x_raw]
+    #     # print(input_x)
+    # except Exception as e:
+    #     print("Exception:%s" % e)
+
 
 '''
     print('main')

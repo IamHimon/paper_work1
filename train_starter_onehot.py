@@ -1,9 +1,9 @@
 from utils import *
-from train_cnn import *
 from sklearn.cross_validation import KFold
 from load_word2vec import *
 from v3.v3_utils import *
 from tensorflow.contrib import learn
+from train_cnn_onehot import *
 
 whether_word2vec = False
 whether_tf = False
@@ -21,9 +21,20 @@ print("Reading sample data:")
 journals = load_all_journals()
 titles = load_all_v3titles()
 authors = load_all_v3authors()
+journals = journals[:int(len(journals)/2)]
+titles = titles[:int(len(titles)/2)]
 x_text = titles + authors + journals
 max_sample_length = max([len(x) for x in x_text])
 print("max_document_length:", max_sample_length)
+
+print("Making padding:")
+titles_contents = makePaddedList(max_sample_length, titles)
+authors_contents = makePaddedList(max_sample_length, authors)
+journals_contents = makePaddedList(max_sample_length, journals)
+taj_contents = titles_contents+authors_contents+journals_contents
+samples_sum_size = len(taj_contents)
+print("samples_sum_size", samples_sum_size)
+print("Padding over!")
 
 # 这里设定为max_sample_length,因为下面函数,if samples are longer,they will be trimmed, if shorter-padding
 vocab_processor = learn.preprocessing.VocabularyProcessor(max_sample_length)
@@ -39,10 +50,6 @@ if whether_word2vec:
     print(w_train[1])
 else:
     print("Building w_train according word2vec vocabulary:")
-    # load data
-    # f_titles, f_authors, f_journals = load_data_not_word2vec()
-    # x_text = f_titles + f_authors + f_journals
-
     w_train_raw = word2id_vocab2(x_text, vocab)
     w_train = np.array(makePaddedList_index(max_sample_length, w_train_raw, 1))
     # 因为这里直接用原始的sample来构建矩阵,所以还需要padding,"<p> ==> 1"
@@ -58,7 +65,7 @@ else:
     # embedding_dim = 100
     # embedding = np.full([vocab_size, embedding_dim], 1.0, dtype=float)
 
-
+'''
 if whether_tf:
     print("Making padding:")
     titles_contents = makePaddedList(max_sample_length, titles)
@@ -117,6 +124,7 @@ else:
     print('journal shape:', j_tf_train.shape)
     print("Building TF feature over!")
 
+'''
 
 y_train, label_dict_size = build_y_train_publication(titles_contents, authors_contents, journals_contents)
 
@@ -125,40 +133,24 @@ data_size = len(w_train)
 shuffle_indices = np.random.permutation(np.arange(data_size))
 s_w_train = w_train[shuffle_indices]
 s_y_train = y_train[shuffle_indices]
-s_t_tf_train = t_tf_train[shuffle_indices]
-s_a_tf_train = a_tf_train[shuffle_indices]
-s_j_tf_train = j_tf_train[shuffle_indices]
+
 print(s_w_train.shape)
 print(s_y_train.shape)
-print(s_t_tf_train.shape)
-print(s_a_tf_train.shape)
-print(s_j_tf_train.shape)
-
-# print("max sample length:", max_sample_length)
-# print("vocab_size:", vocab_size)
-
 
 # ===================================
 print("Start to train:")
 print("Initial TrainCNN: ")
-train = TrainCNN(whether_word2vec=whether_word2vec,
-                 whether_tf=whether_tf,
+train = TrainCNN_ONEHOT(
                  vocab_size=vocab_size,
                  embedding_dim=embedding_dim,   # 词向量维度,或者embedding的维度
                  sequence_length=max_sample_length,     # padding之后的句子长度
-                 vocab_processor=vocab_processor,
                  num_classes=label_dict_size,
-                 tf_dict_size=tf_dic_size
                  )
 # Split train/test set, use 10_fold cross_validation
 print("k_fold train:")
 k_fold = KFold(len(s_w_train), n_folds=5)
 for train_indices, test_indices in k_fold:
     w_tr, w_te = s_w_train[train_indices], s_w_train[test_indices]
-    t_tf_tr, t_tf_te = s_t_tf_train[train_indices], s_t_tf_train[test_indices]
-    a_tf_tr, a_tf_te = s_a_tf_train[train_indices], s_a_tf_train[test_indices]
-    j_tf_tr, j_tf_te = s_j_tf_train[train_indices], s_j_tf_train[test_indices]
     y_tr, y_te = s_y_train[train_indices], s_y_train[test_indices]
-
-    train.cnn_train(whether_word2vec, whether_tf, embedding, w_tr, w_te, t_tf_tr, t_tf_te, a_tf_tr, a_tf_te, j_tf_tr, j_tf_te, y_tr, y_te)
+    train.cnn_train_onehot(w_tr, w_te, y_tr, y_te)
 

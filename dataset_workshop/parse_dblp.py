@@ -2,7 +2,7 @@ from lxml import etree
 
 CATEGORIES = {'article', 'inproceedings', 'proceedings', 'book', 'incollection', 'phdthesis', "mastersthesis", "www"}
 SKIP_CATEGORIES = {'phdthesis', 'mastersthesis', 'www'}
-DATA_ITEMS = ["title", "year", "journal", "ee"]
+DATA_ITEMS = ["title", "year", "journal", "ee", "year", "volume", "pages"]
 
 
 def clear_element(element):
@@ -16,6 +16,55 @@ def extract_paper_elements(context):
         if element.tag in CATEGORIES:
             yield element
             clear_element(element)
+
+
+# build test dataset according dblp,
+# one record:"title,author1,author2,author3,journal,year,volume,pages"
+def build_samples(context, output, boundary1, boundary2, boundary3):
+    record_count = 0
+    author_part = ''
+    title_set = set()
+    author_set = set()
+    journal_set = set()
+    pages_set = set()
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        authors = [author.text for author in element.findall("author")]
+        # 定义词典
+        paper = {
+            'element': element.tag,
+            'mdate': element.get("mdate"),
+            'dblpkey': element.get('key')
+        }
+        for data_item in DATA_ITEMS:
+            data = element.find(data_item)
+            if data is not None:
+                paper[data_item] = data  # 词典中加入新元素
+
+        if (paper['element'] not in SKIP_CATEGORIES)and ("journal" in paper.keys())and("title" in paper.keys())and ("year" in paper.keys())and("volume" in paper.keys())\
+                    and("pages" in paper.keys())and(paper["journal"].text is not None)and (paper["title"].text is not None)\
+                and(paper["year"].text is not None)and(paper["volume"].text is not None)and(paper["pages"].text is not None):
+            record_count += 1
+            print('paperCounter', paperCounter)
+            print('record_count:', record_count)
+            if record_count <= boundary2:
+                title_set.add(paper["title"].text)
+                journal_set.add(paper["journal"].text)
+                pages_set.add(paper["pages"].text)
+                for author in authors:
+                    author_set.add(author)
+            # 保留30%的sample
+
+            if record_count >= boundary1:
+                for author in authors:
+                    author_part += author + ','
+                sample = author_part + paper["title"].text + ',' + paper["journal"].text + ',' + paper["year"].text \
+                         + ',' + paper["volume"].text + ',' + paper["pages"].text
+                print(sample)
+                output.write(sample + '\n')
+                author_part = ''
+            if record_count == boundary3:
+                break
+    return title_set, author_set, journal_set, pages_set
 
 
 # build dataset which titles,authors and journals stored separately.
@@ -43,6 +92,32 @@ def fast_iter(context, t_output, a_output, j_output):
                         if author is not None:
                             a_output.write(author+"\n")
                     j_output.write(paper["journal"].text+'\n')
+            print(paperCounter)
+
+
+# build dataset which year,volume and pages stored separately.
+def fast_iter5(context, y_output, v_output, p_output):
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+            # 定义词典
+            paper = {
+                'element': element.tag,
+                'mdate': element.get("mdate"),
+                'dblpkey': element.get('key')
+            }
+            for data_item in DATA_ITEMS:
+                data = element.find(data_item)
+                if data is not None:
+                    paper[data_item] = data  # 词典中加入新元素
+
+            if (paper['element'] not in SKIP_CATEGORIES) and ("year" in paper.keys())and("volume" in paper.keys())\
+                    and("pages" in paper.keys()):
+                print(paper["year"].text)
+                print(paper["volume"].text)
+                print(paper["pages"].text)
+                if(paper["year"].text is not None) and (paper["volume"].text is not None)and (paper["pages"].text is not None):
+                    y_output.write(paper["year"].text+'\n')
+                    v_output.write(paper["volume"].text+'\n')
+                    p_output.write(paper["pages"].text+'\n')
             print(paperCounter)
 
 
@@ -139,8 +214,6 @@ def fast_iter4(context, output):
                     output.write('\n')
             print(paperCounter)
 
-# def split_all_taj():
-
 
 def main():
     output = open("temp_title_author_journal.txt", 'w+')
@@ -173,6 +246,38 @@ def build():
     j_output.close()
 
 
+def build2():
+    y_output = open("temp_year.txt", 'w+')
+    v_output = open('temp_volume.txt', 'w+')
+    p_output = open('temp_page.txt', 'w+')
+    infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
+    infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile, events=("end",), load_dtd=True)  # 生成迭代器
+    fast_iter5(context, y_output, v_output, p_output)
+    y_output.close()
+    v_output.close()
+    p_output.close()
+
+
+def build_samples_main():
+    t_output = open("temp_titles_kb.txt", 'w+')
+    a_output = open('temp_authors_kb.txt', 'w+')
+    j_output = open('temp_journals_kb.txt', 'w+')
+    p_output = open('temp_page.txt_kb', 'w+')
+    output = open('temp_dataset2.txt', 'w+')
+
+    infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
+    infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile2, events=("end",), load_dtd=True)
+    title_set, author_set, journal_set, pages_set = build_samples(context, output, 7000, 10000, 20000)
+    save_data(title_set, t_output)
+    save_data(author_set, a_output)
+    save_data(journal_set, j_output)
+    save_data(pages_set, p_output)
+
+    output.close()
+
+
 def build_cleared_corpus4word2vec():
     output = open("cleared_corpus4word2vec.txt", 'w+')
     infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
@@ -182,7 +287,34 @@ def build_cleared_corpus4word2vec():
     journal_set = set()
 
 
+def build_year4KB():
+    file_name = 'year_kb.txt'
+    fw = open(file_name, 'w+')
+    for i in range(1900, 2017):
+        print(i)
+        fw.write(str(i) + '\n')
+    fw.close()
+
+
+def build_volume4KB():
+    file_name = 'volume_kb.txt'
+    fw = open(file_name, 'w+')
+    for i in range(200):
+        fw.write(str(i) + '\n')
+    fw.close()
+
+
+def save_data(data, output):
+    for d in data:
+        output.write(d + '\n')
+    output.close()
+
+
 if __name__ == '__main__':
     # main()
     # buildcorpus4word2vec()
-    build()
+    # build2()
+    # build_year4KB()
+    # build_volume4KB()
+    build_samples_main()
+    # build()

@@ -1,4 +1,5 @@
 from decimal import *
+from hello import *
 getcontext().prec = 6
 # print(Decimal(1) / Decimal(7))
 #
@@ -9,7 +10,9 @@ getcontext().prec = 6
 
 a = Decimal(0.009999)
 b = Decimal(0.000001)
-c = a+b
+c = a + b
 print(c)
 c += Decimal(0.000001)
 print(c)
+
+help()

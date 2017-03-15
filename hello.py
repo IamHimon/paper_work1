@@ -3,6 +3,7 @@ from utils import *
 from load_word2vec import *
 import random
 import re
+from second_hand_house.toolbox import *
 
 
 def test_tf(embedding, input_x, sequence_length):
@@ -130,17 +131,45 @@ def build_date_data(date_size):
 
 if __name__ == '__main__':
     print('main')
+    vocab = load_dict('second_hand_house/second_hand_house_complete_dict.pickle')
+    # str = ' 1-42'
+    # # print(match_regex('1-42'))
+    # page_regex0 = r'.*([0-9]+\-[0-9]+$)'
+    # print(re.match(page_regex0, str))
+
     # dates = build_date_data(20)
     # print(dates)
     # n = np.zeros([2, 2])
     # print(n)
-    s1 = "Spatio-temporal Event Modeling and Ranking, Xuefei Li, Hongyun Cai, Zi Huang, Yang Yang and Xiaofang Zhou, " \
-         "14th International Conference on Web Information System Engineering,2013"
-    s2 = "[0,1,1,1,1,1,2,3]"
-    matchObj = re.match(r'\[', s2)
-    print(matchObj)
-    l = [x for x in eval(s2)]
-    print(l)
+    # s1 = "Spatio-temporal Event Modeling and Ranking, Xuefei Li, Hongyun Cai, Zi Huang, Yang Yang and Xiaofang Zhou, " \
+    #      "14th International Conference on Web Information System Engineering,2013"
+    # s2 = "[0,1,1,1,1,1,2,3]"
+    # s3 = 'pages 12-35'
+    # s31 = 'pp 13-89'
+    # s32 = '45-56'
+    # s4 = '(2015)'
+    # s41 = '2016'
+    #
+    # page_regex1 = r'.*(^[0-9]+\-[0-9]+$)'
+    # page_regex2 = r'.*(page.[0-9]+\-[0-9]+$)'
+    # page_regex2 = r'.*(pp.[0-9]+\-[0-9]+$)'
+    # print(re.match(page_regex2, s31))
+
+    # matchObj = re.match(r'[0-9]', s2)
+    # print(matchObj)
+    # l = [x for x in eval(s2)]
+    # print(l)
+    # year_regex1 = r'.*([1-2][0-9]{3})'  # '2014
+    # year_regex2 = r'.*(\([1-2][0-9]{3}\))'  # '(2014)'
+    # year_regex = "|".join([year_regex2, year_regex1])
+    # reobj1 = re.compile(year_regex1)
+    # print(reobj1.findall(s4))
+    # reobj2 = re.compile(year_regex2)
+    # print(reobj2.findall(s4))
+    #
+    # result = re.match(year_regex, s41)
+    # print(result)
+
 
 
 

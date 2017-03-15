@@ -95,37 +95,88 @@ class TrainCNN(object):
                 time_str = datetime.datetime.now().isoformat()
                 self.fp = open("result_"+str(time_str), "w")
 
-    def train_step_tf(self, w_batch, t_tf_batch, a_tf_batch, j_tf_batch, y_batch, embedding):
-        feed_dict = {
-            self.cnn.t_tf: t_tf_batch,
-            self.cnn.a_tf: a_tf_batch,
-            self.cnn.j_tf: j_tf_batch,
-            self.cnn.input_x: w_batch,
-            self.cnn.input_y: y_batch,
-            self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
-            self.cnn.word_placeholder: embedding
-        }
+    def train_step(self, whether_word2vec, w_batch, y_batch, embedding):
+        print('train whether_word2vec:', whether_word2vec)
+        if whether_word2vec:
+            feed_dict = {
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+                self.cnn.word_placeholder: embedding
+            }
+            _, step, summaries, loss, accuracy, predictions, embedding_init = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
+        else:
+            print("train not word2vec!", whether_word2vec)
+            feed_dict = {
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+            }
+            _, step, summaries, loss, accuracy, predictions, = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions], feed_dict=feed_dict)
 
-        _, step, summaries, loss, accuracy, predictions, embedding_init = \
-            self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
-                           self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
         time_str = datetime.datetime.now().isoformat()
         print("train# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         self.train_summary_writer.add_summary(summaries, step)
 
-    def test_step_tf(self, w_batch, t_tf_batch, a_tf_batch, j_tf_batch, y_batch, embedding, writer=None):
-        feed_dict = {
-            self.cnn.t_tf: t_tf_batch,
-            self.cnn.a_tf: a_tf_batch,
-            self.cnn.j_tf: j_tf_batch,
-            self.cnn.input_x: w_batch,
-            self.cnn.input_y: y_batch,
-            self.cnn.dropout_keep_prob: 1.0,     # set 1.0 at test step
-            self.cnn.word_placeholder: embedding
-        }
-        step, summaries, loss, accuracy, predictions, embedding_init = \
-            self.sess.run([self.global_step, self.dev_summary_op, self.cnn.loss,
-                           self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
+    def train_step_tf(self, whether_word2vec, w_batch, t_tf_batch, a_tf_batch, j_tf_batch, y_batch, embedding):
+        print('train whether_word2vec:', whether_word2vec)
+        if whether_word2vec:
+            feed_dict = {
+                self.cnn.t_tf: t_tf_batch,
+                self.cnn.a_tf: a_tf_batch,
+                self.cnn.j_tf: j_tf_batch,
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+                self.cnn.word_placeholder: embedding
+            }
+            _, step, summaries, loss, accuracy, predictions, embedding_init = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
+        else:
+            feed_dict = {
+                self.cnn.t_tf: t_tf_batch,
+                self.cnn.a_tf: a_tf_batch,
+                self.cnn.j_tf: j_tf_batch,
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+            }
+            _, step, summaries, loss, accuracy, predictions, = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions], feed_dict=feed_dict)
+
+        time_str = datetime.datetime.now().isoformat()
+        print("train# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+        self.train_summary_writer.add_summary(summaries, step)
+
+    def test_step(self, whether_word2vec, w_batch, y_batch, embedding, writer=None):
+        print("test step:")
+        if whether_word2vec:
+            feed_dict = {
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+                self.cnn.word_placeholder: embedding
+            }
+            _, step, summaries, loss, accuracy, predictions, embedding_init = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
+        else:
+            print('test not word2vec!', whether_word2vec)
+            feed_dict = {
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+            }
+            _, step, summaries, loss, accuracy, predictions, = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions], feed_dict=feed_dict)
+
         time_str = datetime.datetime.now().isoformat()
         print("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         self.fp.write("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
@@ -133,12 +184,47 @@ class TrainCNN(object):
         if writer:
             writer.add_summary(summaries, step)
 
-    def cnn_train(self, embedding, w_tr, w_te, t_tf_tr, t_tf_te, a_tf_tr, a_tf_te, j_tf_tr, j_tf_te, y_tr, y_te,
+    def test_step_tf(self, whether_word2vec, w_batch, t_tf_batch, a_tf_batch, j_tf_batch, y_batch, embedding, writer=None):
+        if whether_word2vec:
+            feed_dict = {
+                self.cnn.t_tf: t_tf_batch,
+                self.cnn.a_tf: a_tf_batch,
+                self.cnn.j_tf: j_tf_batch,
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+                self.cnn.word_placeholder: embedding
+            }
+            _, step, summaries, loss, accuracy, predictions, embedding_init = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
+        else:
+            feed_dict = {
+                self.cnn.t_tf: t_tf_batch,
+                self.cnn.a_tf: a_tf_batch,
+                self.cnn.j_tf: j_tf_batch,
+                self.cnn.input_x: w_batch,
+                self.cnn.input_y: y_batch,
+                self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
+            }
+            _, step, summaries, loss, accuracy, predictions, = \
+                self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
+                               self.cnn.accuracy, self.cnn.predictions], feed_dict=feed_dict)
+
+        time_str = datetime.datetime.now().isoformat()
+        print("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+        self.fp.write("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+        self.fp.write('\n')
+        if writer:
+            writer.add_summary(summaries, step)
+
+    def cnn_train(self, whether_word2vec, whether_tf, embedding, w_tr, w_te, t_tf_tr, t_tf_te, a_tf_tr, a_tf_te, j_tf_tr, j_tf_te, y_tr, y_te,
                   test_every=200, checkpoint_every=200, batch_size=64, num_epoch=10, shuffle=True):
         # Generate batches per_epoch and execute train step
         data_size = len(w_tr)
         num_batch_per_epoch = int(len(w_tr)/batch_size) + 1
         print("train...")
+        print('whether_word2vec:', whether_word2vec)
         for epoch in range(num_epoch):
             if shuffle:
                 shuffle_indices = np.random.permutation(np.arange(data_size))
@@ -156,79 +242,18 @@ class TrainCNN(object):
             for batch_num in range(num_batch_per_epoch):
                 start = batch_num * batch_size
                 end = min((batch_num + 1) * batch_size, data_size)
-                self.train_step_tf(s_w_tr[start:end], s_t_tf_tr[start:end], s_a_tf_tr[start:end], s_j_tf_tr[start:end], s_y_tr[start:end], embedding)
+                if whether_tf:
+                    self.train_step_tf(whether_word2vec, s_w_tr[start:end], s_t_tf_tr[start:end], s_a_tf_tr[start:end], s_j_tf_tr[start:end], s_y_tr[start:end], embedding)
+                else:
+                    self.train_step(whether_word2vec, s_w_tr[start:end], s_y_tr[start:end], embedding)
                 current_step = tf.train.global_step(self.sess, self.global_step)
                 if current_step % test_every == 0:
                     print("\nEvaluation:")
-                    self.test_step_tf(w_te, t_tf_te, a_tf_te, j_tf_te, y_te, embedding, writer=self.dev_summary_writer)
+                    if whether_tf:
+                        self.test_step_tf(whether_word2vec, w_te, t_tf_te, a_tf_te, j_tf_te, y_te, embedding, writer=self.dev_summary_writer)
+                    else:
+                        self.test_step(whether_word2vec, w_te, y_te, embedding, writer=self.dev_summary_writer)
                     print("")
                 if current_step % checkpoint_every == 0:
                     path = self.saver.save(self.sess, self.checkpoint_prefix, global_step=current_step)
                     print("Saved model checkpoint to {}\n".format(path))
-'''
-    def cnn_train(self, embedding, w_tr, w_te, y_tr, y_te, test_every=200, checkpoint_every=200,
-                  batch_size=64, num_epoch=10, shuffle=True):
-        # Generate batches per_epoch and execute train step
-        data_size = len(w_tr)
-        num_batch_per_epoch = int(len(w_tr)/batch_size) + 1
-        print("train...")
-        for epoch in range(num_epoch):
-            if shuffle:
-                shuffle_indices = np.random.permutation(np.arange(data_size))
-                s_w_tr = w_tr[shuffle_indices]
-                s_y_tr = y_tr[shuffle_indices]
-            else:
-                s_w_tr = w_tr
-                s_y_tr = y_tr
-
-            for batch_num in range(num_batch_per_epoch):
-                start = batch_num * batch_size
-                end = min((batch_num + 1) * batch_size, data_size)
-                self.train_step(s_w_tr[start:end], s_y_tr[start:end], embedding)
-                current_step = tf.train.global_step(self.sess, self.global_step)
-                if current_step % test_every == 0:
-                    print("\nEvaluation:")
-                    self.test_step(w_te, y_te, embedding, writer=self.dev_summary_writer)
-                    print("")
-                if current_step % checkpoint_every == 0:
-                    path = self.saver.save(self.sess, self.checkpoint_prefix, global_step=current_step)
-                    print("Saved model checkpoint to {}\n".format(path))
-
-    def train_step(self, w_batch, y_batch, embedding):
-        feed_dict = {
-            self.cnn.t_tf: t_tf_batch,
-            self.cnn.a_tf: a_tf_batch,
-            self.cnn.j_tf: j_tf_batch,
-            self.cnn.input_x: w_batch,
-            self.cnn.input_y: y_batch,
-            self.cnn.dropout_keep_prob: 0.5,     # set 0.5 at train step
-            self.cnn.word_placeholder: embedding
-        }
-
-        _, step, summaries, loss, accuracy, predictions, embedding_init = \
-            self.sess.run([self.train_op, self.global_step, self.train_summary_op, self.cnn.loss,
-                           self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
-        time_str = datetime.datetime.now().isoformat()
-        print("train# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-        self.train_summary_writer.add_summary(summaries, step)
-
-    def test_step(self, w_batch, t_tf_batch, a_tf_batch, j_tf_batch, y_batch, embedding, writer=None):
-        feed_dict = {
-            self.cnn.t_tf: t_tf_batch,
-            self.cnn.a_tf: a_tf_batch,
-            self.cnn.j_tf: j_tf_batch,
-            self.cnn.input_x: w_batch,
-            self.cnn.input_y: y_batch,
-            self.cnn.dropout_keep_prob: 1.0,     # set 1.0 at test step
-            self.cnn.word_placeholder: embedding
-        }
-        step, summaries, loss, accuracy, predictions, embedding_init = \
-            self.sess.run([self.global_step, self.dev_summary_op, self.cnn.loss,
-                           self.cnn.accuracy, self.cnn.predictions, self.cnn.embedding_init], feed_dict=feed_dict)
-        time_str = datetime.datetime.now().isoformat()
-        print("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-        self.fp.write("test# {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-        self.fp.write('\n')
-        if writer:
-            writer.add_summary(summaries, step)
-'''
