@@ -23,6 +23,7 @@ def extract_paper_elements(context):
 def build_samples(context, output, boundary1, boundary2, boundary3):
     record_count = 0
     author_part = ''
+    linked_author_set = set()
     title_set = set()
     author_set = set()
     journal_set = set()
@@ -47,11 +48,20 @@ def build_samples(context, output, boundary1, boundary2, boundary3):
             print('paperCounter', paperCounter)
             print('record_count:', record_count)
             if record_count <= boundary2:
-                title_set.add(paper["title"].text)
-                journal_set.add(paper["journal"].text)
-                pages_set.add(paper["pages"].text)
-                for author in authors:
-                    author_set.add(author)
+                title_set.add(paper["title"].text.strip('.').lower())
+                journal_set.add(paper["journal"].text.lower())
+                pages_set.add(paper["pages"].text.lower())
+                # for author in authors:
+                #     author_set.add(author.lower())
+                #
+                # authors = [author.text for author in element.findall("author")]
+                if authors:
+                    if len(authors) == 1:
+                        linked_author_set.add(authors[0].lower())
+                        print(authors[0].lower())
+                    else:
+                        linked_author_set.add((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
+                        print((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
             # 保留30%的sample
 
             if record_count >= boundary1:
@@ -64,7 +74,7 @@ def build_samples(context, output, boundary1, boundary2, boundary3):
                 author_part = ''
             if record_count == boundary3:
                 break
-    return title_set, author_set, journal_set, pages_set
+    return title_set, linked_author_set, journal_set, pages_set
 
 
 # build dataset which titles,authors and journals stored separately.
@@ -215,6 +225,27 @@ def fast_iter4(context, output):
             print(paperCounter)
 
 
+def fast_iter6(context):
+    linked_author_set = set()
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        print(paperCounter)
+        authors = [author.text for author in element.findall("author")]
+        if authors:
+            if len(authors) == 1:
+                linked_author_set.add(authors[0].lower())
+                print(authors[0])
+            else:
+                linked_author_set.add((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
+                print((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
+                # if paperCounter % 2 == 0:
+                #     linked_author_set.add(' '.join(authors))
+                #     print(' '.join(authors))
+                # else:
+                #     linked_author_set.add(' '.join(authors[:-1]) + ' and ' + authors[-1])
+                #     print(' '.join(authors[:-1]) + ' and ' + authors[-1])
+    return linked_author_set
+
+
 def main():
     output = open("temp_title_author_journal.txt", 'w+')
     infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
@@ -260,21 +291,23 @@ def build2():
 
 
 def build_samples_main():
-    t_output = open("temp_titles_kb.txt", 'w+')
-    a_output = open('temp_authors_kb.txt', 'w+')
-    j_output = open('temp_journals_kb.txt', 'w+')
-    p_output = open('temp_page.txt_kb', 'w+')
-    output = open('temp_dataset2.txt', 'w+')
+    # t_output = open("lower_temp_titles_kb.txt", 'w+')
+    a_output = open('lower_temp_linked_authors_kb.txt', 'w+')
+    # j_output = open('lower_temp_journals_kb.txt', 'w+')
+    # y_output = open('temp_year_kb.txt', 'w+')
+    # v_output = open('temp_volume_kb.txt', 'w+')
+    # p_output = open('lower_temp_page.txt_kb', 'w+')
+    output = open('temp_dataset3.txt', 'w+')
 
     infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
     infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
     context = etree.iterparse(infile2, events=("end",), load_dtd=True)
     title_set, author_set, journal_set, pages_set = build_samples(context, output, 7000, 10000, 20000)
-    save_data(title_set, t_output)
+    # save_data(title_set, t_output)
     save_data(author_set, a_output)
-    save_data(journal_set, j_output)
-    save_data(pages_set, p_output)
-
+    # save_data(journal_set, j_output)
+    # save_data(pages_set, p_output)
+    #
     output.close()
 
 
@@ -310,6 +343,16 @@ def save_data(data, output):
     output.close()
 
 
+def build_linkedauthor():
+    la_output = open('lower_linked_authors_no_punctuation.txt', 'w+')
+    infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
+    infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile, events=("end",), load_dtd=True)
+    lined_authors_set = fast_iter6(context)
+
+    save_data(lined_authors_set, la_output)
+
+
 if __name__ == '__main__':
     # main()
     # buildcorpus4word2vec()
@@ -318,3 +361,4 @@ if __name__ == '__main__':
     # build_volume4KB()
     build_samples_main()
     # build()
+    # build_linkedauthor()

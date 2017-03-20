@@ -6,11 +6,49 @@ getcontext().prec = 5
 
 
 #  calculate TF(term frequency)
-def cal_tf(path):
-    result = {}
-    with open(path) as file_obj:
-        all_the_text = file_obj.read()
+def cal_tf(word, word_count_dict, sum_word_count):
+    t_tf = 0.0
+    if word in word_count_dict.keys():
+        t_tf = word_count_dict[word] / sum_word_count
+        # t_tf = '%.5f' % (word_count_dict[word] / sum_word_count)
+    return t_tf
 
+
+# calculate one sample's tf value in dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
+def make_tf_feature(sent_contents, word_count_dict, sum_word_coun):
+    # t_path = '/home/himon/PycharmProjects/paper_work1/v3/titles4v3.txt'
+    # t_word_count, t_sum_word_count = count_word(t_path)
+    tf = []
+    temp = []
+    for sent in sent_contents:
+        # print(sent)
+        for title in sent:
+            # print(cal_title_tf(title.lower(), t_word_count, t_sum_word_count))
+            temp.append(cal_tf(title.lower(), word_count_dict, sum_word_coun))
+        tf.append(temp)
+        temp = []
+    return tf
+
+
+# 归一化,对于sample中的同一个word,他的三个tf值相加等于1
+# 输入不需要单独输入各个tf list,而作为整个list输入
+# 而且输出不是字符串格式
+#返回也是返回一整个list
+def normalize_tf_v2(all_tf_list):
+    sum = 0.0
+    temp = []
+    result = []
+    for j in range(len(all_tf_list[0])):
+        for i in range(len(all_tf_list)):
+            sum += all_tf_list[i][j]
+        # print('sum=', sum)
+        for i in range(len(all_tf_list)):
+            temp.append(float('%.5f' % (all_tf_list[i][j] / sum)))
+        result.append(temp)
+        temp = []
+        # print('====================')
+    return result
 
 # 从文件中读取内容，统计词频
 def count_word(path):
@@ -31,6 +69,10 @@ def count_word(path):
             result[word] += 1
 
         return result, sum_word_count
+
+
+def get_normalize_tf_result():
+    print('tf')
 
 
 # 构造词频的字典,区间是[0,1],间隔0.0001,一共1001个.
@@ -163,8 +205,31 @@ def cal_journal_tf(word, j_word_count, j_sum_word_cout):
     return j_tf
 
 
-def cal_word_tf(word):
+# calculate year tf
+def cal_year_tf(word, y_word_count, y_sum_word_cout):
+    j_tf = 0.0
+    if word in y_word_count.keys():
+        j_tf = y_word_count[word] / y_sum_word_cout
+    return j_tf
 
+
+# calculate journal tf
+def cal_volume_tf(word, v_word_count, v_sum_word_cout):
+    j_tf = 0.0
+    if word in v_word_count.keys():
+        j_tf = v_word_count[word] / v_sum_word_cout
+    return j_tf
+
+
+# calculate journal tf
+def cal_pages_tf(word, p_word_count, p_sum_word_cout):
+    j_tf = 0.0
+    if word in p_word_count.keys():
+        j_tf = p_word_count[word] / p_sum_word_cout
+    return j_tf
+
+
+def cal_word_tf(word):
     # calculate title tf
     t_path = 'titles4v3.txt'
     t_word_count, t_sum_word_count = count_word(t_path)
@@ -200,6 +265,10 @@ def cal_word_tf(word):
     return normalized_t_tf, normalized_a_tf, normalized_j_tf
 
 
+
+
+# calculate one sample's tf value in title dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
 def make_title_tf_feature(sent_contents):
     t_path = '/home/himon/PycharmProjects/paper_work1/v3/titles4v3.txt'
     t_word_count, t_sum_word_count = count_word(t_path)
@@ -215,6 +284,8 @@ def make_title_tf_feature(sent_contents):
     return title_tf
 
 
+# calculate one sample's tf value in author dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
 def make_author_tf_feature(sent_contents):
     a_path = '/home/himon/PycharmProjects/paper_work1/v3/authors4v3.txt'
     a_word_count, a_sum_word_count = count_word(a_path)
@@ -228,6 +299,8 @@ def make_author_tf_feature(sent_contents):
     return author_tf
 
 
+# calculate one sample's tf value in journal dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
 def make_journal_tf_feature(sent_contents):
     j_path = '/home/himon/PycharmProjects/paper_work1/v3/all_journal_1614_.txt'
     j_word_count, j_sum_word_cout = count_word(j_path)
@@ -241,6 +314,52 @@ def make_journal_tf_feature(sent_contents):
     return journal_tf
 
 
+# calculate one sample's tf value in journal dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
+def make_year_tf_feature(sent_contents):
+    j_path = '/home/himon/PycharmProjects/paper_work1/v3/all_journal_1614_.txt'
+    j_word_count, j_sum_word_cout = count_word(j_path)
+    journal_tf = []
+    temp = []
+    for sent in sent_contents:
+        for journal in sent:
+            temp.append(cal_journal_tf(journal.lower(), j_word_count, j_sum_word_cout))
+        journal_tf.append(temp)
+        temp = []
+    return journal_tf
+
+
+# calculate one sample's tf value in journal dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
+def make_volume_tf_feature(sent_contents):
+    j_path = '/home/himon/PycharmProjects/paper_work1/v3/all_journal_1614_.txt'
+    j_word_count, j_sum_word_cout = count_word(j_path)
+    journal_tf = []
+    temp = []
+    for sent in sent_contents:
+        for journal in sent:
+            temp.append(cal_journal_tf(journal.lower(), j_word_count, j_sum_word_cout))
+        journal_tf.append(temp)
+        temp = []
+    return journal_tf
+
+
+# calculate one sample's tf value in journal dataset
+# return: [w1_tf,w2_tf,,,,,,wn_t]
+def make_pages_tf_feature(sent_contents):
+    j_path = '/home/himon/PycharmProjects/paper_work1/v3/all_journal_1614_.txt'
+    j_word_count, j_sum_word_cout = count_word(j_path)
+    journal_tf = []
+    temp = []
+    for sent in sent_contents:
+        for journal in sent:
+            temp.append(cal_journal_tf(journal.lower(), j_word_count, j_sum_word_cout))
+        journal_tf.append(temp)
+        temp = []
+    return journal_tf
+
+
+# 归一化,对于sample中的同一个word,他的三个tf值相加等于1
 def normalize_tf(title_tf, author_tf, journal_tf):
     # print('normalize')
     nor_t = []
@@ -279,38 +398,57 @@ def normalize_tf(title_tf, author_tf, journal_tf):
     return nor_t, nor_a, nor_j
 
 
+def lower_journals():
+    fo = open('all_journal_1614_.txt', 'r')
+    fw = open('../dataset_workshop/lower_all_journal.txt', 'w+')
+    journals = fo.readlines()
+    for j in journals:
+        fw.write(j.lower())
+    fo.close()
+    fw.close()
+
 if __name__ == '__main__':
-    # file_name = '/home/himon/PycharmProjects/paper_work1/word2vec/all_journal_1614_.txt'
-    # tf, sum_word_count = count_word(file_name)
+    # file_name = '../dataset_workshop/temp_titles_kb.txt'
+    # title_word_count_dict, title_sum_word_count = count_word(file_name)
+    # l2 = [['Mathematics', 'and', 'Computers', 'in', 'Simulation']]
+    # tf = make_tf_feature(l2, title_word_count_dict, title_sum_word_count)
+    # print(tf)
+    # print(sum_word_count)
+    # print(tf)
     #
     # for key, value in tf.items():
     #     print(key + ":%d" % value)
-    file_path = "all_title_1517347_.txt"
+    # file_path = "all_title_1517347_.txt"
     # read_title(file_path)
 
-    file_path2 = "all_author_1137677_.txt"
+    # file_path2 = "all_author_1137677_.txt"
     # read_author(file_path2)
     # save_tf_dic()
     # cal_word_tf('<p>')
-
-    # l = [['Effectively', 'Finding', 'Relevant', 'Web', 'Pages', 'from', 'Linkage', 'Information'],
-    #      ['A', 'framework', 'for', 'design', 'knowledge', 'management', 'and', 'reuse', 'for', 'Product-Service', 'Systems', 'in', 'construction', 'machinery', 'industry']]
-    # t_tf = make_title_tf_feature(l)
-    # a_tf = make_author_tf_feature(l)
-    # j_tf = make_journal_tf_feature(l)
-    # # print(len(t_tf))
-    # # print(t_tf[0])
-    # # print(t_tf[0][1])
+    #
+    # l = [['mathematics', 'and', 'Computers', 'in', 'Simulation', 'Jayaram', 'Bhasker', 'Shi-Xia', 'Liu', 'meng', 'hu', 'The', 'Usability', 'Engineering', 'Life', 'Cycle', '2014']]
+    # l2 = [['Mathematics', 'and', 'Computers', 'in', 'Simulation']]
+    # t_tf = make_title_tf_feature(l2)
+    # a_tf = make_author_tf_feature(l2)
+    # j_tf = make_journal_tf_feature(l2)
+    # all_tf_list = t_tf + a_tf + j_tf
+    # print(all_tf_list)
     # print(t_tf)
     # print(a_tf)
     # print(j_tf)
-    # normalize_tf(t_tf, a_tf, j_tf)
+    # print('====')
+    # result = normalize_tf_v2(all_tf_list)
+    # print(result)
+    # print(nor_t)
+    # print(nor_a)
+    # print(nor_j)
 
     # tf_dic = build_tf_dic()
     # print(tf_dic)
     # print(len(tf_dic))
     # # print(tf_dic)
     # content = ['The', 'MOSIX', 'multicomputer', 'operating', 'system', 'for', 'high', 'performance', 'cluster', 'computing', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>', '<p>']
-    build_test_title(file_path)
-    build_test_author(file_path2)
+    # build_test_title(file_path)
+    # build_test_author(file_path2)
+    lower_journals()
 

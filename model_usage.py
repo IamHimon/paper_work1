@@ -6,10 +6,9 @@ from second_hand_house.hello import *
 from blocking.block import *
 
 # prepare test data
-# # # ==================================================
+# # ==================================================
 # x_raw = ["The Interaction between Schema Matching and Record Matching in Data Integration",
-#          "Binbin Gu",
-#          "Zhixu Li",
+#          "Binbin Gu,Zhixu Li,Meng Hu, and Qiang yang",
 #          "Web-ADARE: A Web-Aided Data Repairing System",
 #          "AML:Efficient Approximate Membership Localization within a Web-Based Join Framework",
 #          "Journal of Intelligent and Fuzzy Systems",
@@ -17,10 +16,10 @@ from blocking.block import *
 #          "JCSE",
 #          "IEEE Wireless Commun",
 #          "TOMCCAP",
+#          'Yunna Wu,Hu Xu,Chuanbo Xu,Kaifeng Chen',
 #          "Progress in AI",
-#          "Meng Hu",
 #          "Optimizing Cost of  Continuous Overlapping Queries over Data Streams by Filter Adaption"]
-# y_test = [0, 1, 1, 0, 0, 2, 2, 2, 2, 2, 2, 1, 0]
+# y_test = [0, 1,  0, 0, 2, 2, 2, 2, 2, 1, 2, 0]
 
 # p1 = "Binbin Gu, Zhixu Li, Xiangliang Zhang, An Liu, Guanfeng Liu, Kai Zheng, Lei Zhao, Xiaofang Zhou," \
 #      " The Interaction between Schema Matching and Record Matching in Data Integration, " \
@@ -76,8 +75,9 @@ from blocking.block import *
 
 # Parameters
 # ==================================================
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/runs/1489590694/checkpoints'    # linked author
 # checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/runs/1487144642/checkpoints'    # word2vec/ not-tf
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/runs/1487824860/checkpoints'      # one-hot/ not-tf
+# checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/runs/1487824860/checkpoints'      # one-hot/ not-tf
 # checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints'      # dataset shrink 50%
 # load word2vec array
 print("loading word2vec:")
@@ -90,14 +90,14 @@ vocab_size, embedding_dim = embedding.shape
 # embedding_dim = 27
 # evaluate
 # ====================================================
-x_raw = ['Guo-Jun Qi', 'Charu C. Aggarwal', 'Thomas S. Huang', 'Breaking the Barrier to Transferring Link Information across Networks.', 'IEEE Trans. Knowl. Data', 'Eng.']
-
+# x_raw = ['Guo-Jun Qi', 'Charu C. Aggarwal', 'Thomas S. Huang', 'Breaking the Barrier to Transferring Link Information across Networks.', 'IEEE Trans. Knowl. Data', 'Eng.']
+x_raw = ['Mathematics and Computers in Simulation', 'Jayaram Bhasker Shi-Xia Liu meng hu', 'meng hu Isospectral-like flows and eigenvalue problem','hu Isospectral-like flows and eigenvalue problem', 'Isospectral-like flows and eigenvalue problem', '2014']
 input_list = [x.split() for x in x_raw]
 # print(input_list)
-input_pad = makePaddedList2(27, input_list, 0)
+input_pad = makePaddedList2(51, input_list, 0)
 # print(input_pad)
 
-input_samples = sample2index_matrix(input_pad, vocab, 27)
+input_samples = sample2index_matrix(input_pad, vocab, 51)
 print(input_samples)
 
 
@@ -169,7 +169,7 @@ with graph.as_default():
         softmax_loss = tf.nn.softmax(loss)
         print("softmax loss:", sess.run(softmax_loss))
         predictions = sess.run(predictions, feed_dict=feed_dict)
-        # print("predictions:", predictions)
+        print("predictions:", predictions)
 
         # revise_predictions = revise_predictions(predictions, loss)
         # print("predictions after revise:", revise_predictions)

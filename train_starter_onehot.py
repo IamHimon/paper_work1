@@ -21,8 +21,8 @@ print("Reading sample data:")
 journals = load_all_journals()
 titles = load_all_v3titles()
 authors = load_all_v3authors()
-journals = journals[:int(len(journals)/2)]
-titles = titles[:int(len(titles)/2)]
+# journals = journals[:int(len(journals)/2)]
+# titles = titles[:int(len(titles)/2)]
 x_text = titles + authors + journals
 max_sample_length = max([len(x) for x in x_text])
 print("max_document_length:", max_sample_length)

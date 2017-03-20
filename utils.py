@@ -26,7 +26,8 @@ def load_all_v3titles():
 
 
 def load_all_v3authors():
-    fp = open('v3/authors4v3.txt', 'r')
+    # fp = open('v3/authors4v3.txt', 'r')
+    fp = open('dataset_workshop/linked_authors.txt', 'r') # linked author train CNN
     lines = fp.readlines()
     authors_l = []
     for line in lines:

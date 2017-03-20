@@ -15,4 +15,4 @@ print(c)
 c += Decimal(0.000001)
 print(c)
 
-help()
+print(float('%.3f' % (1/3)))
