@@ -1,0 +1,92 @@
+len_ex_Unknown = 6:
+比如:blocks = ['Dominique', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
+     lables =	['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Volume', 'Pages']
+
+我们不直接来处理值,我们用值的index数组作为依托,来寻找满足条件的所有可能情况,有三个条件:
+1.最多6块; 2.all cover; 3.no overlap
+
+
+(1),构建排序的label dict: [('Author', 0), ('Title', 3), ('Journal', 4), ('Year', 5), ('Volume', 6), ('Pages', 7)]
+
+(2),这样,我们获得了,anchor_indexes:[0, 3, 4, 5, 6, 7] , 和  unknown_indexes: [1,2]
+
+(3),接下来根据anchor_indexes构建all_sinks: [[[0], [3], [4], [5], [6], [7]]],是一个三维数组
+
+(4),然后通过程序由上面的all_sinks和unknown_indexes获得所有combined_sinks的index数组:
+[[[0, 1, 2], [3], [4], [5], [6], [7]], [[0, 1], [2, 3], [4], [5], [6], [7]]]
+
+*这一步由combine_all_sinks()函数完成,算法讲解:
+对all_sinks中的每一个sinks,unknown只能插入到跟他绝对值相邻(judge_if_neighbour(u, sinks[s]) = True)的块中,
+每个unknown_index都先生成一个available_sink_index,及所有可以插入的位置,然后在插入到这些位置的block中
+
+
+(5),最后根据combined_sinks来重构blocks和labels:
+比如, 当combined_sink = [[0, 1, 2], [3], [4], [5], [6], [7]]
+重构后成一个tuple:  (blcok,label):
+(['Dominique Fournier Crémilleux A quality', 'pruning.', 'Knowl.-Based Sys t.', '2002', '15', '37-43'], 
+['Author', 'Title', 'Journal', 'Year', 'Volume', 'Pages'])
+
+*这一步由reblock_according_sinks()函数完成,输入是blocks, labels, 和每个combined_sinks
+
+一个函数可以完成上述功能:normal_reblock_according_sinks,这是一个有yield的函数.这个函数的输入:
+blocks, labels
+
+
+当len_ex_Unknown < 6:
+比如 blocks: ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
+     labels: ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Unknown', 'Pages']
+
+(1),构建排序的label dict: [('Author', 0), ('Title', 3), ('Journal', 4), ('Year', 5), ('Pages', 7)]
+(2), 获得anchor_indexes: [0, 3, 4, 5, 7], 和 unknown_indexes: [1, 2, 6]
+(3), 变成len_ex_Unknown=6的情况, 
+以为anchor_indexes: [0, 3, 4, 5, 7] 的len_ex_Unknown=5,所以只能在unknown_indexes中选出来一块作为一个ex_Unknown块
+放到anchor_indexes中,且unknown_indexes中邻居index作为一块来处理,对于上面这个例子,的出来的结果是:
+([[[0], [1, 2], [3], [4], [5], [7]]], [6]),  ([[[0], [3], [4], [5], [6], [7]]], [1,2])
+
+*这里的步骤:先得到all_sinks: [[0], [3], [4], [5], [7]], 和 backup_sinks: [[1, 2], [6]]
+然后通过排列组合,输出所有重构的index组合: 
+当 len_ex_Unknown = n ,每次从backup_sinks中取 (6-n)个:
+([[0], [1, 2], [3], [4], [5], [7]], [[6]])
+([[0], [3], [4], [5], [6], [7]], [[1, 2]])
+变换形式==>(all_sinks, unknown_indexes)
+([[0], [1, 2], [3], [4], [5], [7]],  [6])
+([[0], [3], [4], [5], [6], [7]],  [1, 2])
+
+根据上面结果,变换blocks和labels: backup_sink的label定义为
+
+如: ([[[0], [1, 2], [3], [4], [5], [7]]], [6])
+re_block: ['Dominique Fournier', 'Crémilleux A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43'],
+re_lable: ['Author', 'Backup_Unknown', 'Title', 'Journal', 'Year', 'Unknown', 'Pages']
+
+将这些输入到normal_reblock_and_relabel中,需要blcoks, labels, all_sinks, unknown_indexes
+
+第二个:([[[0], [3], [4], [5], [6], [7]]], [1,2])
+re_block: ['Dominique Fournier', 'Crémilleux',' A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43'],
+re_lable: ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Backup_Unknown', 'Pages']
+
+
+当len_ex_Unknown = 4,每次从backup_sinks中取 2个, 且　sing_label：　['0_Backup_Unknown', '1_Backup_Unknown']
+如:all_sinks:　[[0], [3], [5], [7]]，　backup_sinks:　[[1, 2], [4], [6]]
+排列组合求　backup_sink:  ([1, 2], [4])， rest_backup_sink: [[6]], 　sing_label，
+==> ([[0], [1, 2], [3], [4], [5], [7]], [6])
+blocks: ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
+labels: ['Author', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Year', 'Unknown', 'Pages']
+
+==> ['Dominique Fournier', 'Crémilleux A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
+    ['Author', '0_Backup_Unknown', 'Title', '1_Backup_Unknown', 'Year', 'Unknown', 'Pages']
+然后送到normal_reblock_and_relabel中.
+
+几种情况:
+1.unknown_indexes 为空      ==>  不需要处理
+2.len_ex_Unknown(labels)=6  ==>  常规模式, reblock_and_relabel()
+3.len_ex_Unknown(labels)<6  ==>  处理成常规模式,讲得到的re_blocks和re_labels送入到常规模式中.
+ 构建 backup_sinks,然后从中组合任选出 (6 - len(all_sinks))个sink放入到all_sinks中,切定义新的label
+
+
+
+
+
+
+
+
+
