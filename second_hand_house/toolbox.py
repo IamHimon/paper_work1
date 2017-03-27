@@ -556,6 +556,7 @@ if __name__ == '__main__':
 
     s = '急租 盘蠡新村 精装2室 轻轨口 家电齐全 拎包入住 41212770 2015年03月26日 1700元/月 付3押1 2室2厅1卫'
     s2 = 'hello12345hello456hello'
+    s3 = 'Discovering the Most Influential Sites over Uncertain Data: A Rank Based Approach, K. Zheng, Z. Huang, A. Zhou and X. Zhou, IEEE Transactions on Knowledge and Data Engineering, 24(12),2156-2169, 2012'
     add_length = 0
     # for m in re.finditer(r'\d+', s):
     #     print('start:',m.start())
@@ -565,8 +566,8 @@ if __name__ == '__main__':
     #     add_length += (m.end() - m.start()) + 1
     #     print(s)
     # print(s)
-    print(sample_pretreatment_disperse_number(s))
-    print(sample_pretreatment_disperse_number2(s))
+    print(sample_pretreatment_disperse_number(s3))
+    print(sample_pretreatment_disperse_number2(s3))
     # seg_s = jieba.lcut(sample_pretreatment_disperse_number(s))
     # print(seg_s)
     # number = re.findall(r'\d+', s)
