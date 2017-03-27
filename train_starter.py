@@ -5,7 +5,7 @@ from load_word2vec import *
 from v3.v3_utils import *
 from tensorflow.contrib import learn
 
-whether_word2vec = False
+whether_word2vec = True
 whether_tf = False
 
 # load word2vec array
@@ -32,7 +32,7 @@ vocab_processor = learn.preprocessing.VocabularyProcessor(max_sample_length)
 if whether_word2vec:
     print('Transforming samples to matrix, preparing data for train:')
     w_train_raw = sample2index_matrix2(x_text, vocab)
-    w_train = np.array(makePaddedList_index(max_sample_length, w_train_raw))   # should be np.array() but list
+    w_train = np.array(makePaddedList_index(max_sample_length, w_train_raw, 1))   # should be np.array() but list
     # w_train = np.array(sample2index_matrix(taj_contents, vocab, max_sample_length))   # should be np.array() but list
     print('w_train shape:', w_train.shape)
     print(w_train[0])

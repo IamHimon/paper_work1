@@ -5,33 +5,33 @@ import re
 
 
 # 单独加载journal,因为训练集中journal的样例太少了
-def load_all_journals():
-    fp = open('v3/all_journal_1614_.txt', 'r')
-    lines = fp.readlines()
+def load_all_journals(fp):
+    # fp = open('v3/all_journal_1614_.txt', 'r')
+    # lines = fp.readlines()
     journals_l = []
-    for line in lines:
-        journals_l.append(line.strip('.'))
+    for line in open(fp, 'r'):
+        journals_l.append(line.lower())
     journals = [journal.split() for journal in journals_l]
     return journals
 
 
-def load_all_v3titles():
-    fp = open('v3/titles4v3.txt', 'r')
-    lines = fp.readlines()
+def load_all_v3titles(fp):
+    # fp = open('v3/titles4v3.txt', 'r')
+    # lines = fp.readlines()
     titles_l = []
-    for line in lines:
-        titles_l.append(line.strip('.'))
+    for line in open(fp, 'r'):
+        titles_l.append(line.lower())
     titles = [title.split() for title in titles_l]
     return titles
 
 
-def load_all_v3authors():
+def load_all_v3authors(fp):
     # fp = open('v3/authors4v3.txt', 'r')
-    fp = open('dataset_workshop/linked_authors.txt', 'r') # linked author train CNN
-    lines = fp.readlines()
+    # fp = open('dataset_workshop/linked_authors_no_punctuation.txt', 'r') # linked author train CNN
+    # lines = fp.readlines()
     authors_l = []
-    for line in lines:
-        authors_l.append(line.strip('.'))
+    for line in open(fp, 'r'):
+        authors_l.append(line.lower())
     authors = [author.split() for author in authors_l]
     return authors
 
@@ -480,8 +480,9 @@ def build_y_train_publication(titles_contents, authors_contents, journals_conten
 
 
 if __name__ == '__main__':
-    j = load_all_journals()
-    print(j)
+    print('he.he.'.strip('.'))
+    # j = load_all_journals()
+    # print(j)
     # print('main')
     # samples, labels = read_test_data('data/temp_ada.txt')
     # for i in range(len(samples)):

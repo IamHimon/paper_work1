@@ -23,6 +23,7 @@ titles = load_all_v3titles()
 authors = load_all_v3authors()
 # journals = journals[:int(len(journals)/2)]
 # titles = titles[:int(len(titles)/2)]
+authors = authors[:int(len(authors)/2)]
 x_text = titles + authors + journals
 max_sample_length = max([len(x) for x in x_text])
 print("max_document_length:", max_sample_length)
@@ -43,7 +44,7 @@ vocab_processor = learn.preprocessing.VocabularyProcessor(max_sample_length)
 if whether_word2vec:
     print('Transforming samples to matrix, preparing data for train:')
     w_train_raw = sample2index_matrix2(x_text, vocab)
-    w_train = np.array(makePaddedList_index(max_sample_length, w_train_raw))   # should be np.array() but list
+    w_train = np.array(makePaddedList_index(max_sample_length, w_train_raw, 1))   # should be np.array() but list
     # w_train = np.array(sample2index_matrix(taj_contents, vocab, max_sample_length))   # should be np.array() but list
     print('w_train shape:', w_train.shape)
     print(w_train[0])

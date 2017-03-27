@@ -246,6 +246,28 @@ def fast_iter6(context):
     return linked_author_set
 
 
+def fast_iter7(context):
+    all_pages_set = set()
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        print(paperCounter)
+        # 定义词典
+        paper = {
+            'element': element.tag,
+            'mdate': element.get("mdate"),
+            'dblpkey': element.get('key')
+        }
+        for data_item in DATA_ITEMS:
+            data = element.find(data_item)
+            if data is not None:
+                paper[data_item] = data  # 词典中加入新元素
+
+        if (paper['element'] not in SKIP_CATEGORIES) and ("pages" in paper.keys())and (paper["pages"].text is not None):
+            print(paper["pages"].text)
+            all_pages_set.add(paper["pages"].text)
+
+    return all_pages_set
+
+
 def main():
     output = open("temp_title_author_journal.txt", 'w+')
     infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
@@ -353,12 +375,21 @@ def build_linkedauthor():
     save_data(lined_authors_set, la_output)
 
 
+def build_all_pages():
+    p_output = open('all_pages.txt', 'w+')
+    infile = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile, events=("end",), load_dtd=True)
+    lined_authors_set = fast_iter7(context)
+    save_data(lined_authors_set, p_output)
+
+
 if __name__ == '__main__':
+    build_all_pages()
     # main()
     # buildcorpus4word2vec()
     # build2()
     # build_year4KB()
     # build_volume4KB()
-    build_samples_main()
+    # build_samples_main()
     # build()
     # build_linkedauthor()

@@ -585,13 +585,6 @@ def re_block(blocks, anchors):
     return revise_block, revise_label
 
 
-def len_ex_Unknown(labels):
-    count = 0
-    for l in labels:
-        if l != 'Unknown':
-            count += 1
-    return count
-
 if __name__ == '__main__':
     author_fp = '../dataset_workshop/lower_temp_authors_kb.txt'
     author_fp2 = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
@@ -599,6 +592,7 @@ if __name__ == '__main__':
     journal_fp = '../dataset_workshop/lower_all_journal.txt'
     year_fp = '../dataset_workshop/year_kb.txt'
     volume_fp = '../dataset_workshop/volume_kb.txt'
+    volume_fp2 = '../dataset_workshop/artificial_volumes.txt'
     pages_fp = '../dataset_workshop/temp_page_kb.txt'
 
     # l2 = [['Mathematics', 'and', 'Computers', 'in', 'Simulation']]
@@ -640,11 +634,18 @@ if __name__ == '__main__':
         print(re_blocks)
         print(re_anchors)
         print('--------------')
-        if len_ex_Unknown(re_anchors) == 6:
-            for b in normal_reblock_and_relabel(re_blocks, re_anchors):
-                print(b)
-        else:
-            print('进一步处理!')
+        # if do_blocking(re_blocks, re_anchors):
+        #     for result in do_blocking(re_blocks, re_anchors):
+        #         print('result:', result)
+        do_blocking_result = do_blocking(re_blocks, re_anchors)
+        if do_blocking_result:
+            for r in do_blocking_result:
+                print('result:', r)
+        # if len_ex_Unknown(re_anchors) == 6:
+        #     for b in normal_reblock_and_relabel(re_blocks, re_anchors):
+        #         print(b)
+        # else:
+        #     print('进一步处理!')
         print('=================================================')
 
 

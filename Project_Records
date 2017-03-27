@@ -1,0 +1,17 @@
+CNN训练:
+title:  lower case
+author: and_linked, no_punctuation,lower case
+journal:lower case
+year: number_split
+volume: number_split, 56(3)
+year:number_split
+
+词典vocab:
+所有样例,
+
+
+
+
+
+
+Knowledge_base:

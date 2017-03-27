@@ -1,75 +1,69 @@
 from itertools import combinations, permutations
-from blocking.reconstruction import *
+# from blocking.reconstruction import *
 
-def infinity(start):
-    if start <= 20:
-        yield start
-        yield from infinity(start + 1)
+
+def get_block_value(s, blocks):
+    result = [blocks[i] for i in range(len(blocks)) if i in s]
+    return ' '.join(result)
+
+
+def get_label_value(s, labels, back_sink_sign):
+    # print(s)
+    if s in back_sink_sign.values():
+        return vale_find_key(s, back_sink_sign)
     else:
-        return
-# inf = infinity(10)
-# print(next(i))
-# print(next(i))
-# print(next(i))
-# for i in infinity(10):
-#     print(i)
+        return labels[s[0]]
 
 
-# unknown_index = [1, 3]
-# anchors = [[0], [2], [4], [5], [6], [7]]
-
-def insert_sink(l1, l2):
-    result = sorted(l2 + [l1])
-    return result
+def vale_find_key(value, my_dict):
+    for k, v in my_dict.items():
+        if value == v:
+            return k
 
 
-blocks = ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
-labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Unknown', 'Pages']
+def re_organize_bolckandlabel(blocks, labels, rebuild_sink, rest_backup_sink, sign_label_dict):
+    # 链接成一个记录
+    re_block_index = sorted(rebuild_sink + [rest_backup_sink])
+    # print(re_block_index)
+    # 构造backup_sink和sign_label的dict
+    re_block = []
+    re_label = []
+    for bi in re_block_index:
+        # print(get_label_value2(bi, labels, back_sink_sign))
+        re_block.append(get_block_value(bi, blocks))
+        re_label.append(get_label_value(bi, labels, sign_label_dict))
+    return re_block, re_label
 
-t1 = ([[0], [1, 2], [3], [5], [7]], [6])
-s = '0_Backup_Unknown'
-# print(t1[0])
-# for sink in t1[0]:
-#     print(sink)
-#     print(labels[sink[0]])
-# print(t1[-1])
 
-t2 = ([[0], [3], [5], [6], [7]], [1, 2])
+if __name__ == '__main__':
+    blocks = ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
+    labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Unknown', 'Pages']
+
+    l = [[0], [3], [5], [7]]
+    l2 = [[0], [3], [4], [5], [7]]
+    backup_sinks = [[1, 2], [4], [6]]
+    backup_sinks2 = [[1, 2], [6]]
+
+    rebuild_block = []
+    sign = 0
+    sign_label = [str(i) + '_Backup_Unknown' for i in range(6 - len(l))]
+    # print(sign_label)
+    for bs in combinations(backup_sinks, 6 - len(l)):
+        print('backup_sink:', bs)
+        rest_backup_sink = [b for b in backup_sinks if b not in bs]
+        # print('rest_backup_sink:', rest_backup_sink)
+        rebuild_sink = l + [b for b in bs]
+        print((rebuild_sink, sorted(sum(rest_backup_sink, []))))
+        # print(sorted(sum(rest_backup_sink, [])))
+        sign_label_dict = {}
+        for i in range(len(sign_label)):
+            sign_label_dict[sign_label[i]] = bs[i]
+        # print(sign_label_dict)
+        re_block, re_label = re_organize_bolckandlabel(blocks, labels, rebuild_sink, sorted(sum(rest_backup_sink, [])), sign_label_dict)
+        print(re_block)
+        print(re_label)
 
 
-
-l = [[0], [3], [5], [7]]
-l2 = [[0], [3], [4], [5], [7]]
-backup_sinks = [[1, 2], [4], [6]]
-backup_sinks2 = [[1, 2], [6]]
-
-rebuild_block = []
-sign = 0
-sing_label = [str(i) + '_Backup_Unknown' for i in range(6 - len(l2))]
-print(sing_label)
-for bs in permutations(backup_sinks2, 6 - len(l2)):
-    rest = [b for b in backup_sinks2 if b not in bs]
-    # print('backup_sink:', bs)
-    for i in range(len(bs)):
-
-        print(sing_label[sign])
-        print('add_backup_sink:', bs[i])
-        rest_bs = [x for x in bs if x != bs[i]]
-        rebuild_block = sorted(l2 + [bs[i]])
-        print((rebuild_block, sorted(sum(rest + rest_bs, []))))
-        # 重构blocks和labels
-        re_block_index = sorted(rebuild_block + [sorted(sum(rest + rest_bs, []))])
-        # print(re_block_index)
-
-        re_blocks = []
-        re_labels = []
-
-        for bi in re_block_index:
-            re_blocks.append(get_block_value(bi, blocks))
-            re_labels.append(get_label_value(bi, labels, sing_label[sign]))
-        print(re_blocks)
-        print(re_labels)
-
-    print('===========')
+        print('===========')
 
 

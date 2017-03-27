@@ -3,13 +3,6 @@ import math
 from blocking.block import *
 from itertools import combinations, permutations
 
-def len_ex_Unknown(labels):
-    count = 0
-    for l in labels:
-        if l != 'Unknown':
-            count += 1
-    return count
-
 
 def remove_duplicate(combined_sinks):
     news_ids = []
@@ -217,156 +210,82 @@ def do_blocking(blocks, labels):
     # print(label_dict)
 
     sorted_x = sorted(label_dict.items(), key=operator.itemgetter(1))
-    # print('sorted_x:', sorted_x)
+    print('sorted_x:', sorted_x)
     anchor_indexes = [anchor[1] for anchor in sorted_x]
-    # print('anchor_indexes:', anchor_indexes)
-    # print('unknown_indexes:', unknown_indexes)   # 值肯定是递增排序的
+    print('anchor_indexes:', anchor_indexes)
+    print('unknown_indexes:', unknown_indexes)   # 值肯定是递增排序的
 
     all_sinks = [[a] for a in anchor_indexes]
-    # print('all_sinks:', all_sinks)
+    print('all_sinks:', all_sinks)
 
     if unknown_indexes:
         # bachkup_Unknown
+        backup_sinks = []
         if len_ex_Unknown(labels) < 6:
-            backup_sinks = [[u] for u in unknown_indexes]
+            i = 0
+            j = 0
+            while i < len(unknown_indexes):
+                temp = [unknown_indexes[i]]
+                j = i+1
+                while j < len(unknown_indexes):
+                    if judge_if_neighbour(unknown_indexes[j], [unknown_indexes[i]]):
+                        temp += [unknown_indexes[j]]
+                        # print(temp)
+                        j += 1
+                    else:
+                        break
+                i = j
+                # print(temp)
+                backup_sinks.append(temp)
+
             # print('backup_sinks', backup_sinks)
-            sign_label = [str(i) + '_Backup_Unknown' for i in range(6 - len(all_sinks))]
-            # print(sign_label)
-            for bs in combinations(backup_sinks, 6 - len(all_sinks)):
-                # print('backup_sink:', bs)
-                rest_backup_sink = [b for b in backup_sinks if b not in bs]
-                # print('rest_backup_sink:', sorted(sum(rest_backup_sink, [])))
-                rebuild_sink = all_sinks + [b for b in bs]
-                # print(sorted(sum(rest_backup_sink, [])))
-                sign_label_dict = {}
-                for i in range(len(sign_label)):
-                    sign_label_dict[sign_label[i]] = bs[i]
-                # print(sign_label_dict)
-                re_blocks, re_labels = re_organize_bolckandlabel(blocks, labels, rebuild_sink, sorted(sum(rest_backup_sink, [])), sign_label_dict)
-                # print(re_blocks)
-                # print(re_labels)
-                # print([sorted(rebuild_sink)])
-                # print('-------------back to normal:')
-                for r in normal_reblock_and_relabel(re_blocks, re_labels):
-                    do_blocking_result.append(r)
-                # send to normal function
-                # if rest_backup_sink:
-                #     for r in normal_reblock_and_relabel(re_blocks, re_labels):
-                #         do_blocking_result.append(r)
-                # else:
-                #     print('n')
+
+            if len(all_sinks) == 6:
+                print('normal')
+            else:
+                print('unnormal')
+                rebuild_block = []
+                sign_label = [str(i) + '_Backup_Unknown' for i in range(6 - len(all_sinks))]
+                # print(sign_label)
+                for bs in combinations(backup_sinks, 6 - len(all_sinks)):
+                    print('backup_sink:', bs)
+                    rest_backup_sink = [b for b in backup_sinks if b not in bs]
+                    print('rest_backup_sink:', sorted(sum(rest_backup_sink, [])))
+                    rebuild_sink = all_sinks + [b for b in bs]
+                    # print(sorted(sum(rest_backup_sink, [])))
+                    sign_label_dict = {}
+                    for i in range(len(sign_label)):
+                        sign_label_dict[sign_label[i]] = bs[i]
+                    # print(sign_label_dict)
+                    re_blocks, re_labels = re_organize_bolckandlabel(blocks, labels, rebuild_sink, sorted(sum(rest_backup_sink, [])), sign_label_dict)
+                    print(re_blocks)
+                    print(re_labels)
+                    # print([sorted(rebuild_sink)])
+                    # print('-------------back to normal:')
+
+                    # send to normal function
+                    if rest_backup_sink:
+                        for r in normal_reblock_and_relabel(re_blocks, re_labels):
+                            do_blocking_result.append(r)
+                    else:
+                        print('n')
         else:
             for r in reblock_and_relabel(blocks, labels, [all_sinks], unknown_indexes):
                 do_blocking_result.append(r)
     else:
-        return
+        return do_blocking_result
+
+    # print(do_blocking_result)
 
     return do_blocking_result
 
 if __name__ == '__main__':
     blocks = ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
-    # labels = ['Author', 'Unknown', 'Title', 'Unknown',  'Journal','Year', 'Volume', 'Pages']
-    labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Journal', 'Year', 'Pages']
-    # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Unknown', 'Journal', 'Pages']
+    # labels = ['Author', 'Unknown', 'Title', 'Unknown',  'Journal','Unknown', 'Volume', 'Pages']
+    # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Journal', 'Year', 'Pages']
+    labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Journal', 'Unknown', 'Pages']
 
     do_blocking_result = do_blocking(blocks, labels)
     if do_blocking_result:
         for r in do_blocking_result:
             print('result:', r)
-    # for l in do_blocking(blocks, labels):
-    #     print(l)
-    # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Volume', 'Pages']
-
-    # blocks = ['Dominique Fournier', 'Crémilleux A quality', 'pruning.', 'Knowl.-Based Syst.', '2002', '15', '37-43']
-    # labels = ['Author', '0_Backup_Unknown', 'Title', '1_Backup_Unknown', 'Journal', 'Unknown', 'Pages']
-    # for r in normal_reblock_and_relabel(blocks, labels):
-    #     print(r)
-    # do_blocking_result = do_blocking(blocks, labels)
-    # print(do_blocking_result)
-    # print(len(do_blocking_result))
-
-
-'''
-    label_dict = {}
-
-    unknown_indexes = []
-    for i in range(len(labels)):
-        if labels[i] == 'Unknown':
-            unknown_indexes.append(i)
-        else:
-            label_dict[labels[i]] = i
-
-
-    # print(label_dict)
-
-    sorted_x = sorted(label_dict.items(), key=operator.itemgetter(1))
-    # print('sorted_x:', sorted_x)
-    anchor_indexes = [anchor[1] for anchor in sorted_x]
-    # print('anchor_indexes:', anchor_indexes)
-    # print('unknown_indexes:', unknown_indexes)   # 值肯定是递增排序的
-
-    all_sinks = [[a] for a in anchor_indexes]
-    # print('all_sinks:', all_sinks)
-
-
-    # bachkup_Unknown
-    backup_sinks = []
-    if len_ex_Unknown(labels) < 6:
-        i = 0
-        j = 0
-        while i < len(unknown_indexes):
-            temp = [unknown_indexes[i]]
-            j = i+1
-            while j < len(unknown_indexes):
-                if judge_if_neighbour(unknown_indexes[j], [unknown_indexes[i]]):
-                    temp += [unknown_indexes[j]]
-                    # print(temp)
-                    j += 1
-                else:
-                    break
-            i = j
-            # print(temp)
-            backup_sinks.append(temp)
-
-        # print('backup_sinks', backup_sinks)
-
-        if len(all_sinks) == 6:
-            print('normal')
-        else:
-            print('unnormal')
-            rebuild_block = []
-            sign_label = [str(i) + '_Backup_Unknown' for i in range(6 - len(all_sinks))]
-            # print(sign_label)
-            for bs in combinations(backup_sinks, 6 - len(all_sinks)):
-                # print('backup_sink:', bs)
-                rest_backup_sink = [b for b in backup_sinks if b not in bs]
-                # print('rest_backup_sink:', rest_backup_sink)
-                rebuild_sink = all_sinks + [b for b in bs]
-                # print(sorted(sum(rest_backup_sink, [])))
-                sign_label_dict = {}
-                for i in range(len(sign_label)):
-                    sign_label_dict[sign_label[i]] = bs[i]
-                # print(sign_label_dict)
-                re_blocks, re_labels = re_organize_bolckandlabel(blocks, labels, rebuild_sink, sorted(sum(rest_backup_sink, [])), sign_label_dict)
-                # print(re_blocks)
-                # print(re_labels)
-                # print([sorted(rebuild_sink)])
-                # print('-------------back to normal:')
-
-                # send to normal function
-                if rest_backup_sink:
-                    for l in normal_reblock_and_relabel(re_blocks, re_labels):
-                        print(l)
-                else:
-                    print('n')
-                print('-----------------------------------------------------')
-
-    else:
-        for r in reblock_and_relabel(blocks, labels, [all_sinks], unknown_indexes):
-            print(r)
-
-'''
-
-
-
-
