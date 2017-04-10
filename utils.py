@@ -2,6 +2,7 @@ import numpy as np
 from load_word2vec import *
 import time,datetime
 import re
+import nltk
 
 
 # 单独加载journal,因为训练集中journal的样例太少了
@@ -142,6 +143,23 @@ def makeWordList(sent_list):
         i += 1
         wl[w] = i
     return wl
+
+
+def makePosFeatures(sent_contents):
+    """
+    :param sent_contents:
+    :return:sent_contents中每个sentence都构建一个list,存放sentence中每个word的标注信息.
+    """
+    pos_tag_list = []
+    for sent in sent_contents:
+        # print(sent)
+
+        pos_tag = nltk.pos_tag(sent)
+        # print(pos_tag)
+        pos_tag = list(zip(*pos_tag))[1]    # 拆开pos_tag
+        # print(pos_tag)
+        pos_tag_list.append(pos_tag)
+    return pos_tag_list
 
 
 def mapWordToId(sent_contents, word_dict):
@@ -367,6 +385,45 @@ def revise_predictions(predictions, loss):
         # print('title max index:', max_index)
     # print("after revise:", predictions)
     return predictions
+
+
+# block = np.arrange(len(blocks))
+def all_revise_predictions(predictions, loss, block):
+    copy_predictions = predictions.copy()
+    # print(copy_predictions)
+
+    for p in predictions:
+        max_temp = -10000
+        max_index = 0
+        # print(predictions)
+        # print('p:', str(p))
+        index = np.where(copy_predictions == p)
+        # print(index[0])
+        if len(index[0]) > 1:
+            for i in index[0]:
+                if max_temp < loss[i][p]:
+                    max_temp = loss[i][p]
+                    max_index = i
+            # print('max_index:', str(max_index))
+            # print('rest label:')
+            # print(make_rest_label(copy_predictions, block))
+            for i in index[0]:
+                if i != max_index:
+                    copy_predictions[i] = make_rest_label(copy_predictions, block)[0]
+        # else:
+        #     continue
+        # print(copy_predictions)
+        if (np.sort(copy_predictions) == block).all():
+            result = [str(p) for p in copy_predictions]
+            return result
+
+
+def make_rest_label(predictions, block):
+    rest_label = []
+    for b in block:
+        if b not in predictions:
+            rest_label.append(b)
+    return rest_label
 
 
 # judge if string is more numeric or text

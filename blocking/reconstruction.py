@@ -214,7 +214,7 @@ def do_blocking(blocks, labels):
         else:
             label_dict[labels[i]] = i
 
-    # print(label_dict)
+    print(label_dict)
 
     sorted_x = sorted(label_dict.items(), key=operator.itemgetter(1))
     # print('sorted_x:', sorted_x)
@@ -259,7 +259,7 @@ def do_blocking(blocks, labels):
             for r in reblock_and_relabel(blocks, labels, [all_sinks], unknown_indexes):
                 do_blocking_result.append(r)
     else:
-        return
+        return [(blocks, labels)]
 
     return do_blocking_result
 

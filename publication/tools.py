@@ -1,4 +1,17 @@
 from second_hand_house.toolbox import *
+import tensorflow as tf
+
+
+def max_tensor_score(temp_list, sess):
+    max_s = tf.constant(0.0)
+    result = None
+    for t in temp_list:
+        # print(sess.run(t[1]))
+        if sess.run(tf.less(max_s, t[1])):
+            # print(sess.run(max_s))
+            max_s = t[1]
+            result = t[0]
+    return result
 
 
 def build_volume_dataset():
@@ -89,6 +102,17 @@ def build_y_train_publication_all_attribute(titles, authors, journals, years, vo
     # print("Preparing y_train over!")
     return y_train, label_dict_size
 
+
+# get result with max score
+def max_score(l):
+    max_s = 0
+    result = None
+    for s in l:
+        if s[1] > max_s:
+            max_s = s[1]
+            result = (s[0], s[1])
+    return result
+
 if __name__ == '__main__':
     # build_volume_dataset4train()
     # for i in range(0, 10, 2):
@@ -101,4 +125,10 @@ if __name__ == '__main__':
     #
     # pages = load_pages('../dataset_workshop/temp_page.txt_kb')
     # print(pages)
-    build_complete_vocab()
+    # build_complete_vocab()
+    result = (['josip zoric', 'connecting business models with service platform designs: exploiting potential of scenario modeling.', 'telematics and informatics', '2011', '28', '40-54'], ['Author', 'Title', 'Journal', 'Year', 'Volume', 'Pages'], [1, 0, 2, 3, 5, 5])
+
+    print(' || '.join(result[0]))
+    print('[' + ', '.join(result[1]) + ']')
+    pre = [str(x) for x in result[2]]
+    print('[' + ', '.join(pre) + ']')

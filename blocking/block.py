@@ -408,6 +408,7 @@ def doBlock3(sample, KB):
 # 最后比较threshold来确定最终的anchor
 def doBlock4(sample, KB, threshold):
     r1 = '\,+'
+    # r2 = '\.+'
     # r = '|'.join([r1, r2])
     sample = re.sub(r1, ' ', sample.lower()).split()   # convert string to word list
     # print(sample)
@@ -586,31 +587,48 @@ def re_block(blocks, anchors):
 
 
 if __name__ == '__main__':
-    author_fp = '../dataset_workshop/lower_temp_authors_kb.txt'
-    author_fp2 = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
+    # load Knowledge base
+    author_fp = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
     title_fp = '../dataset_workshop/lower_temp_titles_kb.txt'
     journal_fp = '../dataset_workshop/lower_all_journal.txt'
     year_fp = '../dataset_workshop/year_kb.txt'
-    volume_fp = '../dataset_workshop/volume_kb.txt'
-    volume_fp2 = '../dataset_workshop/artificial_volumes.txt'
+    volume_fp = '../dataset_workshop/artificial_volumes.txt'
     pages_fp = '../dataset_workshop/temp_page_kb.txt'
+    KB = loadKB2(title_fp=title_fp, author_fp=author_fp, journal_fp=journal_fp, year_fp=year_fp, volume_fp=volume_fp, pages_fp=pages_fp)
+    print('Building KB over!')
 
     # l2 = [['Mathematics', 'and', 'Computers', 'in', 'Simulation']]
     p1 = 'Tao Ren, Yi-fan  Wang,Miao-miao Liu,Cai-juan Li and Yi-yang Liu,Mathematics and Computers in Simulation,Telematics and Informatics,2015,32,141-157'
     p12 = 'Tao Ren,Yi-fan Wang,Miao-miao Liu,Cai-juan Li , meng hu, Mathematics and Computers in Simulation,Telematics and Informatics,2015,32,141-157'
     p2 = 'Mathematics and Computers in Simulation,Jayaram Bhasker,Shi-Xia Liu,meng hu,Isospectral-like flows and eigenvalue problem, 2014'
     p3 = 'Nuno Sepúlveda,Carlos Daniel Paulino,Carlos Penha Gonçalves,Bayesian analysis of allelic penetrance models for complex binary traits.,Computational Statistics & Data Analysis,2009,53,1271-1283'
+    l1 = 'Jie Zhu, Wei Jiang, An Liu, Guanfeng Liu, Jiajie Xu and Lei Zhao,  Time-dependent Popular Routes Based Trajectory Outlier Detection, The 16th Web Information System Engineering (WISE), 2015, 32(2), 16-30'
 
-    KB = loadKB2(title_fp=title_fp, author_fp=author_fp2, journal_fp=journal_fp,year_fp=year_fp,volume_fp=volume_fp, pages_fp=pages_fp)
+    p4 = 'Acta Inf.,Nathan Goodman and Oded Shmueli,NP-complete Problems Simplified on Tree Schemas.,20,1983,171-178'
+    p5 = 'Acta Inf,Nathan Goodman and Oded Shmueli,NP-complete Problems Simplified on Tree Schemas,20,1983,171-178'
+    p6 = 'Juha Honkala,A characterization of rational D0L power series,Acta Inf,2011,19-24,48(1)'
+    p7 = 'Explaining the Wheel Sieve,Paul Pritchard,Acta Inf,1982,17,477-485'
     # start = time.clock()
-    # blocks, anchors = doBlock4(p1, KB, threshold=0.8)
+    # blocks, anchors = doBlock4(p4, KB, threshold=1)
     # print(blocks)
     # print(anchors)
-    # end = time.clock()
-    # print("time consuming: %f s" % (end - start))
+    # # end = time.clock()
+    # # print("time consuming: %f s" % (end - start))
     # re_blocks, re_anchors = re_block(blocks, anchors)
     # print(re_blocks)
     # print(re_anchors)
+
+    blocks, anchors = doBlock4(p7, KB, threshold=0.96)
+    print(blocks)
+    print(anchors)
+    # end = time.clock()
+    # print("time consuming: %f s" % (end - start))
+    re_blocks, re_anchors = re_block(blocks, anchors)
+    print(re_blocks)
+    print(re_anchors)
+    do_blocking_result = do_blocking(re_blocks, re_anchors)
+    print(do_blocking_result)
+
     # all_blocks= doBlock2(p1, KB)
     # print(all_blocks)
     # print_my_dict(all_blocks)
@@ -622,6 +640,7 @@ if __name__ == '__main__':
     # print(blocks)
 
     #
+    '''
     fo = open('../dataset_workshop/temp_dataset3.txt', 'r')
     lines = fo.readlines()
     random.shuffle(lines)
@@ -647,7 +666,7 @@ if __name__ == '__main__':
         # else:
         #     print('进一步处理!')
         print('=================================================')
-
+'''
 
 
 

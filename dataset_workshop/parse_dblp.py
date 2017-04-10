@@ -1,8 +1,9 @@
 from lxml import etree
+import random
 
 CATEGORIES = {'article', 'inproceedings', 'proceedings', 'book', 'incollection', 'phdthesis', "mastersthesis", "www"}
 SKIP_CATEGORIES = {'phdthesis', 'mastersthesis', 'www'}
-DATA_ITEMS = ["title", "year", "journal", "ee", "year", "volume", "pages"]
+DATA_ITEMS = ["title", "year", "journal", "ee", "year", "volume", "pages", "number"]
 
 
 def clear_element(element):
@@ -268,6 +269,67 @@ def fast_iter7(context):
     return all_pages_set
 
 
+# author1,author2,author3 and author4, title, journal, year,volume(number),pages
+def fast_iter8(context, output):
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        taj_record_list = []
+        yvp_record_list = []
+
+        # 定义词典
+        paper = {
+            'element': element.tag,
+            'mdate': element.get("mdate"),
+            'dblpkey': element.get('key')
+        }
+        for data_item in DATA_ITEMS:
+            data = element.find(data_item)
+            if data is not None:
+                paper[data_item] = data  # 词典中加入新元素
+        # print(paper.keys())
+        # print(paper['element'])
+
+        authors = [author.text for author in element.findall("author")]
+        if authors:
+                if len(authors) == 1:
+                    taj_record_list.append(authors[0])
+                else:
+                    taj_record_list.append(','.join(authors[:-1]) + ' and ' + authors[-1])
+
+        if ('title' in paper.keys()) and (paper['title'].text is not None):
+            # print(paper['title'].text)
+            taj_record_list.append(paper['title'].text.strip('.'))
+
+        if ("journal" in paper.keys()) and (paper["journal"].text is not None):
+            # journal = paper["journal"].text
+            taj_record_list.append(paper["journal"].text.strip('.'))
+
+        if ('year' in paper.keys()) and (paper['year'].text is not None):
+            # year = paper['year'].text
+            yvp_record_list.append(paper['year'].text)
+
+        if ('volume' in paper.keys()) and ('number' in paper.keys()) and (paper['volume'].text is not None) and \
+                (paper['number'].text is not None):
+            # volume_number = paper['volume'].text + '(' + paper['number'].text + ')'
+            yvp_record_list.append(paper['volume'].text + '(' + paper['number'].text + ')')
+        elif ('volume' in paper.keys()) and (paper['volume'].text is not None):
+            # volume_number = paper['volume'].text
+            yvp_record_list.append(paper['volume'].text)
+
+        if ('pages' in paper.keys()) and (paper['pages'].text is not None):
+            # pages = paper['pages'].text
+            yvp_record_list.append(paper['pages'].text)
+
+        # print(taj_record_list)
+        # print(yvp_record_list)
+        random.shuffle(taj_record_list)
+        random.shuffle(yvp_record_list)
+        result_record = taj_record_list + yvp_record_list
+        print(result_record)
+        print(','.join(result_record))
+        output.write(','.join(result_record) + '\n')
+        print(paperCounter)
+
+
 def main():
     output = open("temp_title_author_journal.txt", 'w+')
     infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
@@ -383,8 +445,17 @@ def build_all_pages():
     save_data(lined_authors_set, p_output)
 
 
+# volume(number)
+def build_dataset2():
+    print('hehe')
+    output = open('temp_combined_data2.txt', 'w+')
+    infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
+    context = etree.iterparse(infile, events=("end",), load_dtd=True)
+    fast_iter8(context, output)
+    output.close()
+
 if __name__ == '__main__':
-    build_all_pages()
+    # build_all_pages()
     # main()
     # buildcorpus4word2vec()
     # build2()
@@ -393,3 +464,4 @@ if __name__ == '__main__':
     # build_samples_main()
     # build()
     # build_linkedauthor()
+    build_dataset2()

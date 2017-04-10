@@ -193,7 +193,7 @@ def load_all_data():
 
 
 def map_word2index(x_text, word_dict):
-    print("map word to index:")
+    # print("map word to index:")
     w_train = []
     temp = []
     for x in x_text:
