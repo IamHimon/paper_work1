@@ -3,7 +3,7 @@ len_ex_Unknown = 6:
      lables =	['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Volume', 'Pages']
 
 我们不直接来处理值,我们用值的index数组作为依托,来寻找满足条件的所有可能情况,有三个条件:
-1.最多6块; 2.all cover; 3.no overlap
+1.最多6(len(label_dict))块; 2.all cover; 3.no overlap
 
 
 (1),构建排序的label dict: [('Author', 0), ('Title', 3), ('Journal', 4), ('Year', 5), ('Volume', 6), ('Pages', 7)]
@@ -13,7 +13,7 @@ len_ex_Unknown = 6:
 (3),接下来根据anchor_indexes构建all_sinks: [[[0], [3], [4], [5], [6], [7]]],是一个三维数组
 
 (4),然后通过程序由上面的all_sinks和unknown_indexes获得所有combined_sinks的index数组:
-[[[0, 1, 2], [3], [4], [5], [6], [7]], [[0, 1], [2, 3], [4], [5], [6], [7]]]
+[[[0, 1, 2], [3], [4], [5], [6], [7]], [[0, 1], [2, 3], [4], [5], [6], [7]], [[0], [1, 2, 3], [4], [5], [6], [7]]]
 
 *这一步由combine_all_sinks()函数完成,算法讲解:
 对all_sinks中的每一个sinks,unknown只能插入到跟他绝对值相邻(judge_if_neighbour(u, sinks[s]) = True)的块中,
@@ -79,13 +79,13 @@ labels: ['Author', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Year', 'Unknown', 
 几种情况:
 1.unknown_indexes 为空      ==>  不需要处理
 2.len_ex_Unknown(labels)=6  ==>  常规模式, reblock_and_relabel()
-3.len_ex_Unknown(labels)<6  ==>  处理成常规模式,讲得到的re_blocks和re_labels送入到常规模式中.
+3.len_ex_Unknown(labels)<6  ==>  处理成常规模式,将得到的re_blocks和re_labels送入到常规模式中.
  构建 backup_sinks,然后从中组合任选出 (6 - len(all_sinks))个sink放入到all_sinks中,切定义新的label
 
 
 
-
-
+do_blocking(blocks,labels,unlabeled_block_len, unknown_list)
+return do_blocking_result,unknown_list
 
 
 
