@@ -1,58 +1,19 @@
+from SHH_testdata.generate_dataset import *
 import tensorflow as tf
-import sys
-sys.path.append('..')
-import getopt
-# from blocking.reconstruction import *
 from publication.tools import *
-from blocking.block import *
-from utilss.utils import *
 
-opts, args = getopt.getopt(sys.argv[1:], "hi:o:")
-ANCHOR_THRESHOLD_VALUE = 0
+ANCHOR_THRESHOLD_VALUE = 0.95
+KB = loadKB_SHH()
 
-for op, value in opts:
-    if op == '-t':
-        ANCHOR_THRESHOLD_VALUE = int(value)
-
-if ANCHOR_THRESHOLD_VALUE:
-    exit('Please enter threshold value!')
-
-print("threshold value: %d", ANCHOR_THRESHOLD_VALUE)
-
-# ANCHOR_THRESHOLD_VALUE = 0.95
-result_output = 'result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json'
-
-# load Knowledge base
-author_fp = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
-title_fp = '../dataset_workshop/lower_temp_titles_kb.txt'
-journal_fp = '../dataset_workshop/lower_all_journal.txt'
-year_fp = '../dataset_workshop/year_kb.txt'
-volume_fp = '../dataset_workshop/artificial_volumes.txt'
-pages_fp = '../dataset_workshop/temp_page_kb.txt'
-KB = loadKB2(title_fp=title_fp, author_fp=author_fp, journal_fp=journal_fp, year_fp=year_fp, volume_fp=volume_fp, pages_fp=pages_fp)
-print('Building KB over!')
-
-# reload vocab
-vocab = load_dict('publication_complete_dict.pickle')
+# print("build vocab:")
+print('reload vocab:')
+vocab = load_dict('second_hand_house_complete_dict.pickle')
 pos_vocab = load_dict('pos.pickle')
-print('Load vocab over!')
+print('load vocab over!')
 
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1494120826/checkpoints'
+max_length = 25
 
-# line = 'Invariants, Composition, and Substitution,Acta Inf,Ekkart Kindler,32(4),299-312,1995'
-# line = 'Rainer Kemp,A Note on the Density of Inherently Ambiguous Context-free Languages,Acta Inf,14,295-298,1980'
-
-
-# main result: (['Dominique Fournier', 'Crémilleux', 'A quality pruning. Knowl.-Based Syst', '2002', '15 37-43'], ['Journal', '0_Backup_0_Backup_Unknown', 'Title', 'Volume', 'Pages'])
-# main result: (['Dominique Fournier Crémilleux', 'A quality pruning. Knowl.-Based Syst', '2002', '15 37-43'], ['Journal', 'Title', 'Volume', 'Pages'])
-
-# Parameters
-# ==================================================
-# checkpoint_dir = '/home/humeng/paper_work1/publication/runs/1490626741/checkpoints/'
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/publication/runs/1490626741/checkpoints'
-
-max_length = 90
-
-print(checkpoint_dir)
 # ==================================================
 checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
 print(checkpoint_file)
@@ -85,26 +46,25 @@ with graph.as_default():
 
             print('Reading data:')
             # for line in lines:
-            # line = 'Another Polynomial Homomorphism,Robert T. Moenck,Acta Inf,1976,6(4),153-169'
-            line = 'Estimations and Optimal Designs for Two-Dimensional Haar-Wavelet Regression Models,IJWMIP,Yongge Tian,7(3),281-297,2009'
-            # line = 'Hans-Dietrich O. F. Gronau,Combinatorica,On Sperner families in which no k sets have an empty intersection III,2(1),1982,25-36'
+            line = '凯悦 大厦 家电 齐全 看房 随时 一室 精装 紧靠 吴中 汽车站 靠近 地铁口,2015 年 03 月 09 日,1650 元 / 月,付 3 押 1,1 室 1 厅 1 卫,48 平米,17 / 26,床 空调 电视 冰箱 洗衣机 热水器 可做饭 独立 卫生间 阳台'
+
             print(line.strip())
-            blocks, anchors = doBlock4(line.strip(), KB, threshold=ANCHOR_THRESHOLD_VALUE)
+            blocks, anchors = doBlock5(line, KB, SECOND_HAND_HOUSE, threshold=ANCHOR_THRESHOLD_VALUE)
             print(blocks)
             print(anchors)
             re_blocks, re_anchors = re_block(blocks, anchors)
             print(re_blocks)
             print(re_anchors)
             # print('--------------')
-            if len_Unknown(re_anchors) and len(re_anchors) >= len(LABEL_DICT):
+            if len_Unknown(re_anchors) and len(re_anchors) >= len(SECOND_HAND_HOUSE):
                 temp_list = []
-                for r in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT)):
-                    # print('result:', r)
+                for r in do_blocking2(re_blocks, re_anchors, len(SECOND_HAND_HOUSE), SECOND_HAND_HOUSE):
+                    print('result:', r)
                     print('---------------------------')
                     # print(r[0])
                     # 用sample_pretreatment_disperse_number2处理一下: '105-107' ==> '1 0 5 - 1 0 7'
                     x_raw = [sample_pretreatment_disperse_number2(x).strip() for x in r[0]]
-                    input_list = [x.lower().split() for x in x_raw]
+                    input_list = [x.split() for x in x_raw]
                     y_test = r[1]
                     print(x_raw)
                     print(y_test)
@@ -172,4 +132,5 @@ with graph.as_default():
                 print(dict_labels)
 
             print("###############################################")
+
 

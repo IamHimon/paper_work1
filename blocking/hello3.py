@@ -61,14 +61,17 @@ if __name__ == '__main__':
     # print(re_block)
     # print(re_label)
 
-    combined_sinks = [[[0], [1], [2, 3], [4], [5], [6]], [[0], [1], [2], [3, 4], [5], [6]], [[0], [1], [2, 3], [4], [5], [6]], [[0], [1], [2], [3, 4], [5], [6]]]
+    # combined_sinks = [[[0], [1], [2, 3], [4], [5], [6]], [[0], [1], [2], [3, 4], [5], [6]], [[0], [1], [2, 3], [4], [5], [6]], [[0], [1], [2], [3, 4], [5], [6]]]
+    #
+    # # print(len(combined_sinks))
+    # # print(set(combined_sinks))
+    # for c in combined_sinks:
+    #     print(c)
+    # news_ids = []
+    # for id in combined_sinks:
+    #     if id not in news_ids:
+    #         news_ids.append(id)
+    # print(news_ids)
 
-    # print(len(combined_sinks))
-    # print(set(combined_sinks))
-    for c in combined_sinks:
-        print(c)
-    news_ids = []
-    for id in combined_sinks:
-        if id not in news_ids:
-            news_ids.append(id)
-    print(news_ids)
+    l = '0_Backup_Unknown'
+    print(l.__contains__('Unknown'))

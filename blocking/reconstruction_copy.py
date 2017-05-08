@@ -229,7 +229,7 @@ def re_organize_label(labels, rebuild_sink, rest_backup_sink, sign_label_dict):
 
 # block_count:分成多少块
 # Unknown_list:可以是['Unknown'],或者['0_Backup_Unknown'],或者['0_Backup_Unknown','1_Backup_Unknown']
-def do_blocking(blocks, labels, block_count):
+def do_blocking(blocks, labels, target_block_count):
     do_blocking_result = []
     label_dict = {}
     unknown_indexes = []
@@ -255,7 +255,7 @@ def do_blocking(blocks, labels, block_count):
     print(sign_label)
 
     if unknown_indexes:
-        if len_ex_Unknown(labels) < block_count:
+        if len(all_sinks) < target_block_count:
             backup_sinks = [[u] for u in unknown_indexes]
             print('backup_sinks', backup_sinks)
 

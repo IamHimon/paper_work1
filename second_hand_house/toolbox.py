@@ -10,6 +10,8 @@ class_dict = {0:'titles',1:'houseID', 2:'publish_time', 3:'rent',4:'charge_metho
               13:'location', 14:'configuration', 15:'contact_person', 16:'phone_number', 17:'company', 18:'storefront',
               19:'describe', 20:'url'}
 
+SECOND_HAND_HOUSE = {'titles': 0, 'publish_time': 1, 'rent': 2, 'charge_method': 3, 'unit': 4, 'area': 5, 'floor': 6, 'configuration': 7}
+
 
 # save dict
 def save_dict(word_dict, name):
@@ -245,6 +247,27 @@ def build_y_train_publication_second_hand_house(titles, houseIDs, publish_times,
     print("Preparing y_train over!")
     return y_train, label_dict_size
 
+
+def build_y_train_publication_second_hand_house2(titles, publish_times, rents, charge_methods, units, areas, floors, configurations):
+    print("Building label dict:")
+    title_labels = [0 for i in range(len(titles))]
+    publish_times_labels = [1 for i in range(len(publish_times))]
+    rents_labels = [2 for i in range(len(rents))]
+    charge_methods_labels = [3 for i in range(len(charge_methods))]
+    units_labels = [4 for i in range(len(units))]
+    areas_labels = [5 for i in range(len(areas))]
+    floors_labels = [6 for i in range(len(floors))]
+    configurations_labels = [7 for i in range(len(configurations))]
+
+    y_t = title_labels + publish_times_labels + rents_labels + charge_methods_labels + units_labels + areas_labels +\
+          floors_labels + configurations_labels
+    # label_dict_size = len(SECOND_HAND_HOUSE)
+    label_dict_size = 8
+    y_train = np.zeros((len(y_t), label_dict_size))
+    for i in range(len(y_t)):
+        y_train[i][y_t[i]] = 1
+    print("Preparing y_train over!")
+    return y_train, label_dict_size
 
 # use all samples to build a complete vocab
 def build_complete_vocab():
@@ -551,13 +574,13 @@ if __name__ == '__main__':
     # word_dict = load_dict('second_hand_house_dict.pickle')
     # w_train = map_word2index(x_text, word_dict)
     # print(w_train)
-    # urls, urls_labels = load_data4test(1, 5)
-    # print(''.join(urls[0]))
+    urls, urls_labels = load_data4test(1, 5)
+    print(''.join(urls[0]))
 
-    s = '急租 盘蠡新村 精装2室 轻轨口 家电齐全 拎包入住 41212770 2015年03月26日 1700元/月 付3押1 2室2厅1卫'
-    s2 = 'hello12345hello456hello'
-    s3 = 'Discovering the Most Influential Sites over Uncertain Data: A Rank Based Approach, K. Zheng, Z. Huang, A. Zhou and X. Zhou, IEEE Transactions on Knowledge and Data Engineering, 24(12),2156-2169, 2012'
-    add_length = 0
+    # s = '急租 盘蠡新村 精装2室 轻轨口 家电齐全 拎包入住 41212770 2015年03月26日 1700元/月 付3押1 2室2厅1卫'
+    # s2 = 'hello12345hello456hello'
+    # s3 = 'Discovering the Most Influential Sites over Uncertain Data: A Rank Based Approach, K. Zheng, Z. Huang, A. Zhou and X. Zhou, IEEE Transactions on Knowledge and Data Engineering, 24(12),2156-2169, 2012'
+    # add_length = 0
     # for m in re.finditer(r'\d+', s):
     #     print('start:',m.start())
     #     print('end:', m.end())
@@ -566,8 +589,8 @@ if __name__ == '__main__':
     #     add_length += (m.end() - m.start()) + 1
     #     print(s)
     # print(s)
-    print(sample_pretreatment_disperse_number(s3))
-    print(sample_pretreatment_disperse_number2(s3))
+    # print(sample_pretreatment_disperse_number(s3))
+    # print(sample_pretreatment_disperse_number2(s3))
     # seg_s = jieba.lcut(sample_pretreatment_disperse_number(s))
     # print(seg_s)
     # number = re.findall(r'\d+', s)

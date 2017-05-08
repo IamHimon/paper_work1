@@ -1,8 +1,10 @@
+import sys
+sys.path.append('..')
 import operator
 import math
 from blocking.block import *
 from itertools import combinations, permutations
-
+LABEL_DICT = {'Title': 0, 'Author': 1, 'Journal': 2, 'Year': 3, 'Volume': 4, 'Pages': 5}
 
 #判断是不是labels只有LABEL_DICT中的key
 def len_ex_Unknown(labels):
@@ -187,6 +189,7 @@ def re_organize_label(labels, rebuild_sink, rest_backup_sink, sign_label_dict):
 
 
 # unlabeled_block_count:在LABEL_DICT中的个数
+# 如果没有完全没有'Unknown',就不用进入这个函数了,直接输出.
 def do_blocking(blocks, labels, target_block_count):
     # print('target_block_count:', target_block_count)
     do_blocking_result = []
@@ -215,6 +218,7 @@ def do_blocking(blocks, labels, target_block_count):
     sign_label = [str(i) + '_Backup_' + unknown_list[i] for i in range(target_block_count - len(all_sinks))]
     # print(sign_label)
     if len(unknown_indexes) == 0:
+        # yield (blocks, labels)
         return
     if len(all_sinks) < target_block_count:
         backup_sinks = [[u] for u in unknown_indexes]
@@ -256,12 +260,70 @@ def do_blocking(blocks, labels, target_block_count):
             # do_blocking_result.append((nr[0], nr[1]))
             yield from do_blocking(nr[0], nr[1], target_block_count - 1)
 
-    return do_blocking_result
+
+# unlabeled_block_count:在LABEL_DICT中的个数
+# 如果没有完全没有'Unknown',就不用进入这个函数了,直接输出.
+def do_blocking2(blocks, labels, target_block_count, DICT):
+    # print('target_block_count:', target_block_count)
+    label_dict = {}
+    unknown_indexes = []
+    unknown_list = []
+    for i, l in enumerate(labels):
+        if l not in DICT.keys():
+            unknown_list.append(l)
+            unknown_indexes.append(i)
+        else:
+            label_dict[labels[i]] = i
+
+    # print('label_dict:', label_dict)
+    sorted_x = sorted(label_dict.items(), key=operator.itemgetter(1))
+    # print('sorted_x:', sorted_x)
+    anchor_indexes = [anchor[1] for anchor in sorted_x]
+    # print('anchor_indexes:', anchor_indexes)
+    # print('unknown_indexes:', unknown_indexes)   # 值肯定是递增排序的
+    # print('unknown_list:', unknown_list)
+
+    all_sinks = [[a] for a in anchor_indexes]
+    # print('all_sinks:', all_sinks)
+
+    # print(sign_label)
+    if len(unknown_indexes) == 0 or len(labels) < len(DICT):
+        yield (blocks, labels)
+        # return
+    if (len(all_sinks) < target_block_count) and (len(labels) >= len(DICT)):
+        # bachkup_Unknown
+        sign_label = [str(i) + '_Backup_' + unknown_list[i] for i in range(target_block_count - len(all_sinks))]
+
+        backup_sinks = [[u] for u in unknown_indexes]
+        # print('backup_sinks', backup_sinks)
+
+        for bs in combinations(backup_sinks, target_block_count - len(all_sinks)):
+            # print('backup_sink:', bs)
+            rest_backup_sink = [b for b in backup_sinks if b not in bs]
+            # print('rest_backup_sink:', rest_backup_sink)
+            # print('rest_backup_sink:', sorted(sum(rest_backup_sink, [])))
+            rebuild_sink = all_sinks + [b for b in bs]
+            # print('rebuild_sink', sorted(rebuild_sink))
+            # print(sorted(sum(rest_backup_sink, [])))
+            sign_label_dict = {}
+            for i in range(len(sign_label)):
+                sign_label_dict[sign_label[i]] = bs[i]
+            re_labels = re_organize_label(labels, rebuild_sink, rest_backup_sink, sign_label_dict)
+
+            re_result = normal_reblock_and_relabel(blocks, re_labels, unknown_list)
+            for nr in re_result:
+                yield (nr[0], nr[1])
+    else:
+        re_result = normal_reblock_and_relabel(blocks, labels, unknown_list)
+        for nr in re_result:
+            yield (nr[0], nr[1])
+
 
 if __name__ == '__main__':
     blocks = ['Dominique Fournier', 'Crémilleux', 'A quality', 'pruning.', 'Knowl.-Based Syst', '2002', '15', '37-43']
     # labels = ['Author', 'Unknown', 'Title', 'Unknown',  'Journal','Year', 'Volume', 'Pages']
     labels = ['Journal', 'Unknown', 'Unknown', 'Title', 'Unknown', 'Volume', 'Unknown', 'Pages']
+    print(len_Unknown(labels))
     # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Unknown', 'Year', 'Pages']
     # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Volume', 'Journal', 'Pages']
     # blocks = ['Dominique Fournier Crémilleux A quality', 'pruning.', 'Knowl.-Based Syst', '2002', '15', '37-43']
@@ -270,16 +332,16 @@ if __name__ == '__main__':
     # blocks = ['towards effective indexing for large video sequence', 'data', 'h. t. shen b. c. ooi x. zhou and z. huang', 'sigmod', '2005']
     # labels = ['Title', 'Unknown', 'Author', 'Journal', 'Year']
 
-    start = time.clock()
+    # start = time.clock()
     # do_blocking_result = do_blocking(blocks, labels, 6)
     # # print(do_blocking_result)
     # if do_blocking_result:
     #     for r in do_blocking_result:
     #         print('result:', r)
-    for result in do_blocking(blocks, labels, 6):
-        print("main result:", result)
-    end = time.clock()
-    print('time consuming: %f s' % (end - start))
+    # for result in do_blocking2(blocks, labels, len(LABEL_DICT)):
+    #     print("main result:", result)
+    # end = time.clock()
+    # print('time consuming: %f s' % (end - start))
     # for l in do_blocking(blocks, labels):
     #     print(l)
     # labels = ['Author', 'Unknown', 'Unknown', 'Title', 'Journal', 'Year', 'Volume', 'Pages']

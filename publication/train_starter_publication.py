@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 from tensorflow.contrib import learn
 from publication.tools import *
 from sklearn.cross_validation import KFold
@@ -75,7 +77,8 @@ print(s_y_train.shape)
 print('label_dict_size:', label_dict_size)
 
 
-embedding_dim = 80
+
+embedding_dim = 50
 pos_emb_dim = 20
 # ===================================
 print("Start to train:")

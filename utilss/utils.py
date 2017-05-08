@@ -3,11 +3,13 @@ from load_word2vec import *
 import time,datetime
 import re
 import nltk
-from blocking.block import *
+
+LABEL_DICT = {'Title': 0, 'Author': 1, 'Journal': 2, 'Year': 3, 'Volume': 4, 'Pages': 5}
 
 
 def hello():
     print('hello test import!')
+
 
 # 单独加载journal,因为训练集中journal的样例太少了
 def load_all_journals(fp):

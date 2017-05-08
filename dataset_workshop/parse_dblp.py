@@ -48,7 +48,7 @@ def build_samples(context, output, boundary1, boundary2, boundary3):
             record_count += 1
             print('paperCounter', paperCounter)
             print('record_count:', record_count)
-            if record_count <= boundary2:
+            if record_count <= boundary2:  # 10000
                 title_set.add(paper["title"].text.strip('.').lower())
                 journal_set.add(paper["journal"].text.lower())
                 pages_set.add(paper["pages"].text.lower())
@@ -65,7 +65,7 @@ def build_samples(context, output, boundary1, boundary2, boundary3):
                         print((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
             # 保留30%的sample
 
-            if record_count >= boundary1:
+            if record_count >= boundary1:   # 7000
                 for author in authors:
                     author_part += author + ','
                 sample = author_part + paper["title"].text + ',' + paper["journal"].text + ',' + paper["year"].text \
@@ -73,9 +73,50 @@ def build_samples(context, output, boundary1, boundary2, boundary3):
                 print(sample)
                 output.write(sample + '\n')
                 author_part = ''
-            if record_count == boundary3:
+            if record_count == boundary3: # 20000
                 break
     return title_set, linked_author_set, journal_set, pages_set
+
+
+# build test data that have no cover
+def build_samples2(context, boundary1, boundary2):
+    record_count = 0
+    linked_author_set = set()
+    title_set = set()
+    pages_set = set()
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        authors = [author.text for author in element.findall("author")]
+        # 定义词典
+        paper = {
+            'element': element.tag,
+            'mdate': element.get("mdate"),
+            'dblpkey': element.get('key')
+        }
+        for data_item in DATA_ITEMS:
+            data = element.find(data_item)
+            if data is not None:
+                paper[data_item] = data  # 词典中加入新元素
+
+        if (paper['element'] not in SKIP_CATEGORIES)and("title" in paper.keys())and ("year" in paper.keys())and("volume" in paper.keys())\
+                    and("pages" in paper.keys())and (paper["title"].text is not None)\
+                and(paper["year"].text is not None)and(paper["volume"].text is not None)and(paper["pages"].text is not None):
+            record_count += 1
+            print('paperCounter', paperCounter)
+            print('record_count:', record_count)
+            if record_count >= boundary1:  # 20000
+                title_set.add(paper["title"].text.strip('.').lower())
+                pages_set.add(paper["pages"].text.lower())
+                if authors:
+                    if len(authors) == 1:
+                        linked_author_set.add(authors[0].lower())
+                        print(authors[0].lower())
+                    else:
+                        linked_author_set.add((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
+                        print((' '.join(authors[:-1]) + ' and ' + authors[-1]).lower())
+
+            if record_count == boundary2:    # 30000
+                break
+    return title_set, linked_author_set, pages_set
 
 
 # build dataset which titles,authors and journals stored separately.
@@ -270,65 +311,115 @@ def fast_iter7(context):
 
 
 # author1,author2,author3 and author4, title, journal, year,volume(number),pages
-def fast_iter8(context, output):
+def fast_iter8(context, output, boundary1, boundary2):
     for paperCounter, element in enumerate(extract_paper_elements(context)):
-        taj_record_list = []
-        yvp_record_list = []
+        if paperCounter >= boundary1:
+            taj_record_list = []
+            yvp_record_list = []
 
-        # 定义词典
-        paper = {
-            'element': element.tag,
-            'mdate': element.get("mdate"),
-            'dblpkey': element.get('key')
-        }
-        for data_item in DATA_ITEMS:
-            data = element.find(data_item)
-            if data is not None:
-                paper[data_item] = data  # 词典中加入新元素
-        # print(paper.keys())
-        # print(paper['element'])
+            # 定义词典
+            paper = {
+                'element': element.tag,
+                'mdate': element.get("mdate"),
+                'dblpkey': element.get('key')
+            }
+            for data_item in DATA_ITEMS:
+                data = element.find(data_item)
+                if data is not None:
+                    paper[data_item] = data  # 词典中加入新元素
+            # print(paper.keys())
+            # print(paper['element'])
 
-        authors = [author.text for author in element.findall("author")]
-        if authors:
+            authors = [author.text for author in element.findall("author")]
+            if authors:
+                    if len(authors) == 1:
+                        taj_record_list.append(authors[0])
+                    else:
+                        taj_record_list.append(','.join(authors[:-1]) + ' and ' + authors[-1])
+
+            if ('title' in paper.keys()) and (paper['title'].text is not None):
+                # print(paper['title'].text)
+                taj_record_list.append(paper['title'].text.strip('.'))
+
+            if ("journal" in paper.keys()) and (paper["journal"].text is not None):
+                # journal = paper["journal"].text
+                taj_record_list.append(paper["journal"].text.strip('.'))
+
+            if ('year' in paper.keys()) and (paper['year'].text is not None):
+                # year = paper['year'].text
+                yvp_record_list.append(paper['year'].text)
+
+            if ('volume' in paper.keys()) and ('number' in paper.keys()) and (paper['volume'].text is not None) and \
+                    (paper['number'].text is not None):
+                # volume_number = paper['volume'].text + '(' + paper['number'].text + ')'
+                yvp_record_list.append(paper['volume'].text + '(' + paper['number'].text + ')')
+            elif ('volume' in paper.keys()) and (paper['volume'].text is not None):
+                # volume_number = paper['volume'].text
+                yvp_record_list.append(paper['volume'].text)
+
+            if ('pages' in paper.keys()) and (paper['pages'].text is not None):
+                # pages = paper['pages'].text
+                yvp_record_list.append(paper['pages'].text)
+
+            # print(taj_record_list)
+            # print(yvp_record_list)
+            random.shuffle(taj_record_list)
+            random.shuffle(yvp_record_list)
+            result_record = taj_record_list + yvp_record_list
+            print(result_record)
+            print(','.join(result_record))
+            output.write(','.join(result_record) + '\n')
+            print(paperCounter)
+        if paperCounter == boundary2:
+            break
+
+
+def fast_iter9(context, output, boundary1, boundary2):
+    record_count = 0
+    for paperCounter, element in enumerate(extract_paper_elements(context)):
+        if paperCounter >= boundary1:
+            taj_record_list = []
+            yvp_record_list = []
+
+            # 定义词典
+            paper = {
+                'element': element.tag,
+                'mdate': element.get("mdate"),
+                'dblpkey': element.get('key')
+            }
+            for data_item in DATA_ITEMS:
+                data = element.find(data_item)
+                if data is not None:
+                    paper[data_item] = data  # 词典中加入新元素
+            # print(paper.keys())
+            # print(paper['element'])
+
+            authors = [author.text for author in element.findall("author")]
+            if authors and ('title' in paper.keys()) and (paper['title'].text is not None) and ("journal" in paper.keys()) and (paper["journal"].text is not None)\
+                    and ('year' in paper.keys()) and (paper['year'].text is not None) and ('volume' in paper.keys()) and ('number' in paper.keys()) and (paper['volume'].text is not None) and \
+                    (paper['number'].text is not None) and ('pages' in paper.keys()) and (paper['pages'].text is not None)\
+                    and ('e' not in paper['pages'].text):
+                record_count += 1
                 if len(authors) == 1:
                     taj_record_list.append(authors[0])
                 else:
                     taj_record_list.append(','.join(authors[:-1]) + ' and ' + authors[-1])
-
-        if ('title' in paper.keys()) and (paper['title'].text is not None):
-            # print(paper['title'].text)
-            taj_record_list.append(paper['title'].text.strip('.'))
-
-        if ("journal" in paper.keys()) and (paper["journal"].text is not None):
-            # journal = paper["journal"].text
-            taj_record_list.append(paper["journal"].text.strip('.'))
-
-        if ('year' in paper.keys()) and (paper['year'].text is not None):
-            # year = paper['year'].text
-            yvp_record_list.append(paper['year'].text)
-
-        if ('volume' in paper.keys()) and ('number' in paper.keys()) and (paper['volume'].text is not None) and \
-                (paper['number'].text is not None):
-            # volume_number = paper['volume'].text + '(' + paper['number'].text + ')'
-            yvp_record_list.append(paper['volume'].text + '(' + paper['number'].text + ')')
-        elif ('volume' in paper.keys()) and (paper['volume'].text is not None):
-            # volume_number = paper['volume'].text
-            yvp_record_list.append(paper['volume'].text)
-
-        if ('pages' in paper.keys()) and (paper['pages'].text is not None):
-            # pages = paper['pages'].text
-            yvp_record_list.append(paper['pages'].text)
-
-        # print(taj_record_list)
-        # print(yvp_record_list)
-        random.shuffle(taj_record_list)
-        random.shuffle(yvp_record_list)
-        result_record = taj_record_list + yvp_record_list
-        print(result_record)
-        print(','.join(result_record))
-        output.write(','.join(result_record) + '\n')
-        print(paperCounter)
-
+                taj_record_list.append(paper['title'].text.strip('.'))
+                taj_record_list.append(paper["journal"].text.strip('.'))
+                yvp_record_list.append(paper['year'].text)
+                yvp_record_list.append(paper['volume'].text + '(' + paper['number'].text + ')')
+                yvp_record_list.append(paper['pages'].text)
+                # print(taj_record_list)
+                # print(yvp_record_list)
+                random.shuffle(taj_record_list)
+                random.shuffle(yvp_record_list)
+                result_record = taj_record_list + yvp_record_list
+                print(result_record)
+                print(','.join(result_record))
+                output.write(','.join(result_record) + '\n')
+            print(record_count)
+        if paperCounter == boundary2:
+            break
 
 def main():
     output = open("temp_title_author_journal.txt", 'w+')
@@ -395,6 +486,23 @@ def build_samples_main():
     output.close()
 
 
+# have no cover
+def build_samples_main2():
+    t_output = open("../testdata/no_cover_lower_temp_titles_kb.txt", 'w+')
+    a_output = open('../testdata/no_cover_lower_temp_linked_authors_kb.txt', 'w+')
+    # y_output = open('temp_year_kb.txt', 'w+')
+    # v_output = open('temp_volume_kb.txt', 'w+')
+    p_output = open('../testdata/no_cover_lower_temp_page.txt_kb', 'w+')
+
+    infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
+    infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile2, events=("end",), load_dtd=True)
+    title_set, author_set, pages_set = build_samples2(context, 20000, 24000)
+    save_data(title_set, t_output)
+    save_data(author_set, a_output)
+    save_data(pages_set, p_output)
+
+
 def build_cleared_corpus4word2vec():
     output = open("cleared_corpus4word2vec.txt", 'w+')
     infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
@@ -448,10 +556,12 @@ def build_all_pages():
 # volume(number)
 def build_dataset2():
     print('hehe')
-    output = open('temp_combined_data2.txt', 'w+')
+    output = open('../testdata/temp_combined_data6.txt', 'w+')
     infile = '/home/himon/PycharmProjects/paper_work1/dataset_workshop/dblp_temp.xml'
-    context = etree.iterparse(infile, events=("end",), load_dtd=True)
-    fast_iter8(context, output)
+    infile2 = '/home/himon/Jobs/paper_work1/dblp.xml'
+    context = etree.iterparse(infile2, events=("end",), load_dtd=True)
+    fast_iter9(context, output, 24000, 28000)
+    # fast_iter9(context, output, 0, 1000)
     output.close()
 
 if __name__ == '__main__':
@@ -465,3 +575,4 @@ if __name__ == '__main__':
     # build()
     # build_linkedauthor()
     build_dataset2()
+    # build_samples_main2()

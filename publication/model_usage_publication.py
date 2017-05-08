@@ -1,9 +1,14 @@
 import tensorflow as tf
+import sys
+sys.path.append('..')
 from blocking.reconstruction import *
 from publication.tools import *
+from utils import *
 
-result_output = open('temp_combined_data_result_0.96.txt', 'w+')
 
+ANCHOR_THRESHOLD_VALUE = 0.95
+result_output = open('temp_combined_data_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.txt', 'w+')
+result_json_output = open('result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
 
 # load Knowledge base
 author_fp = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
@@ -21,8 +26,7 @@ pos_vocab = load_dict('pos.pickle')
 print('Load vocab over!')
 
 
-# fo = open('../dataset_workshop/temp_dataset3.txt', 'r')
-fo = open('../dataset_workshop/temp_combined_data2.txt', 'r')
+fo = open('../testdata/temp_combined_data7.txt', 'r')
 lines = fo.readlines()
 # random.shuffle(lines)
 
@@ -56,20 +60,23 @@ with graph.as_default():
         cnn_predictions = graph.get_operation_by_name("output/predictions").outputs[0]
 
         print('Reading data:')
-        for line in lines:
-            print(line.strip())
+        for id_record_line in lines:
+            print(id_record_line.strip())
+            line = id_record_line.strip().split('\t')[-1]
+            record_id = id_record_line.strip().split('\t')[0]
             result_output.write(line.strip() + '\n')
-            blocks, anchors = doBlock4(line.strip(), KB, threshold=0.96)
+            blocks, anchors = doBlock4(line.strip(), KB, threshold=ANCHOR_THRESHOLD_VALUE)
             # print(blocks)
             # print(anchors)
             re_blocks, re_anchors = re_block(blocks, anchors)
-            # print(re_blocks)
-            # print(re_anchors)
+            print(re_blocks)
+            print(re_anchors)
             # print('--------------')
-            do_blocking_result = do_blocking(re_blocks, re_anchors)
-            if do_blocking_result:
+            # do_blocking_result = do_blocking2(re_blocks, re_anchors, len(LABEL_DICT))
+
+            if len_Unknown(re_anchors) and len(re_anchors) >= len(LABEL_DICT):
                 temp_list = []
-                for r in do_blocking_result:
+                for r in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT)):
                     # print('result:', r)
                     print('---------------------------')
                     # print(r[0])
@@ -107,16 +114,25 @@ with graph.as_default():
                     # print("loss:", loss)
                     softmax_loss = sess.run(tf.nn.softmax(loss))
                     print("softmax loss:", softmax_loss)
-                    loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
-                    # loss_max = tf.reduce_max(loss, reduction_indices=1)
-                    print('loss_max:', sess.run(loss_max))
-                    score = tf.reduce_sum(loss_max)
-                    print('score:', sess.run(score))
 
-                    cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
-                    print("predictions:", cnn_predictions)
+                    g_predictions, g_loss_max = greddy_predictions(softmax_loss, np.arange(len(softmax_loss[0])))
+                    print('g_prediction:', g_predictions)
+                    print('g_loss_max:', g_loss_max)
+                    g_score = sess.run(tf.reduce_sum(g_loss_max))
+                    print('g_score:', g_score)
 
-                    temp_list.append([(r[0], r[1], cnn_predictions, softmax_loss), score])
+                    temp_list.append([(r[0], r[1], g_predictions), g_score])
+
+                    # loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
+                    # # loss_max = tf.reduce_max(loss, reduction_indices=1)
+                    # print('loss_max:', sess.run(loss_max))
+                    # score = tf.reduce_sum(loss_max)
+                    # print('score:', sess.run(score))
+                    #
+                    # cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
+                    # print("predictions:", cnn_predictions)
+                    #
+                    # temp_list.append([(r[0], r[1], cnn_predictions, softmax_loss), score])
 
                     # Initialize loss and cnn_predictions again in this for loop
                     loss = graph.get_operation_by_name("output/scores").outputs[0]
@@ -125,22 +141,29 @@ with graph.as_default():
                 print('max score result:')
                 # print(temp_list)
                 result = max_tensor_score(temp_list, sess)
-                pre = [str(x) for x in result[2]]
-                print(result)
+                # pre = [str(x) for x in result[2]]
+                # print(result)
                 result_output.write(' || '.join(result[0]) + '\n')
                 result_output.write('[' + ', '.join(result[1]) + ']' + '\n')
-                result_output.write('[' + ', '.join(pre) + ']' + '\n')
-
-                print("revise:")
-                # print(result[3])
-                rest_label = make_rest_label(result[2], np.arange(len(result[2])))
-                # print(rest_label)
-                if len(rest_label):
-                    revise_predictions = all_revise_predictions(result[2], result[3], np.arange(len(result[2])))
-                    result_output.write('revise:'+'\t'+'[' + ', '.join(revise_predictions) + ']' + '\n')
-
+                result_output.write('[' + ', '.join(result[2]) + ']' + '\n')
                 result_output.write('\n')
                 result_output.write('\n')
-                print("###############################################")
+                # save the result to .json file
+                save2json(record_id, result_json_output, result[0], result[1], result[2])
+            else:
+                dict_prediction = lambda x: LABEL_DICT.get(x)
+                dict_predictions = [str(dict_prediction(an)) for an in re_anchors]
+
+                result_output.write(' || '.join(re_blocks) + '\n')
+                result_output.write('[' + ', '.join(re_anchors) + ']' + '\n')
+                result_output.write('[' + ', '.join(dict_predictions) + ']' + '\n')
+                result_output.write('\n')
+                result_output.write('\n')
+
+                # save the result to .json file
+                save2json(record_id, result_json_output, re_blocks, re_anchors, dict_predictions)
+
+            print("###############################################")
 
 result_output.close()
+result_json_output.close()

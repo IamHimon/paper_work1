@@ -2,11 +2,27 @@ import re
 import random
 import math
 import time
-from v3.v3_utils import *
 from blocking.reconstruction import *
 
 
-label_dict = {'Title': 0, 'Author': 1, 'Journal': 2, 'Year': 3, 'Volume': 4, 'Pages': 5}
+LABEL_DICT = {'Title': 0, 'Author': 1, 'Journal': 2, 'Year': 3, 'Volume': 4, 'Pages': 5}
+
+
+def len_Unknown(labels):
+    count = 0
+    for l in labels:
+        if l not in LABEL_DICT.keys():
+            count += 1
+    return count
+
+
+def len_Unknown2(labels, DICT):
+    count = 0
+    for l in labels:
+        if l not in DICT.keys():
+            count += 1
+    return count
+
 
 def load_all_journals(journal_fp):
     # fp = open('../v3/all_journal_1614_.txt', 'r')
@@ -88,7 +104,6 @@ def contains(small, big):
             return True
             pass
         # 对于一个block:'Math',python 自带的 in 返回是True,我们需要返回为False,因为'Mathematics'返回应该为True
-
     return False
 
 
@@ -198,36 +213,41 @@ def isContain4(block, KB):
     # print('block:', block)
     for kb in KB['Year']:
         if block == kb:
-            label = 'Year'
             find = True
             break
     for kb in KB['Volume']:
         if block == kb:
-            label = 'Volume'
             find = True
             break
     for kb in KB['Pages']:
         if block == kb:
-            label = 'Pages'
             find = True
             break
     for kb in KB['Author']:
         if my_in(block, kb):
-            label = 'Author'
             find = True
             break
     for kb in KB['Title']:
         if my_in(block, kb):
-            label = 'Title'
             find = True
             break
     for kb in KB['Journal']:
         if my_in(block, kb):
-            label = 'Journal'
             find = True
             break
     return find
 
+
+def isContain5(block, KB):
+    block = ' '.join(block)
+    find = False
+    for keys, values in KB.items():
+        for kb in values:
+            if my_in(block, kb):
+                # print('kb:', kb)
+                find = True
+                break
+    return find
 
 # 确定一个block的label,输入是一个block中每个word在KB中确定的label,如:block:'Wei-Hsi Hung', label_list:['Author', 'Author']
 # 策略:label_list的最后一个label值记为这个block的label
@@ -406,7 +426,7 @@ def doBlock3(sample, KB):
 
 # 先做block过程,再计算block的VF,然后返回归一化的结果和blcok.
 # 最后比较threshold来确定最终的anchor
-def doBlock4(sample, KB, threshold):
+def doBlock4( sample, KB, threshold):
     r1 = '\,+'
     # r2 = '\.+'
     # r = '|'.join([r1, r2])
@@ -437,13 +457,64 @@ def doBlock4(sample, KB, threshold):
             i += 1
         else:
             i = indice
-
+    # 耗时: 2.5s
     # print('result_blocks', result_blocks)
     nornalime_vf_list = cal_values_tf2(result_blocks, KB)
-    # print(nornalime_vf_list)
+    print('nornalime_vf_list:', nornalime_vf_list)
+    # 耗时: 2s
 
     # determine anchors
     anchors = determinte_anchor(nornalime_vf_list, threshold)
+
+    # print('b_end0 %f s' % (b_end2 - start))
+
+    return result_blocks, anchors
+
+
+# add dict
+def doBlock5(sample, KB, DICT, threshold):
+    r1 = '\,+'
+    # r2 = '\.+'
+    # r = '|'.join([r1, r2])
+    sample = re.sub(r1, ' ', sample).split()   # convert string to word list
+    # print(sample)
+    result_blocks = []
+    i = 0
+    while i < len(sample):
+        block = sample[i:i + 1]
+        indice = 0
+        for j in range(i+1, len(sample) + 1):
+            # print('j:', j)
+            temp = sample[i:j]
+            # print('temp:', temp)
+
+            find =isContain5(temp, KB)   # return dict
+            # print(find)
+            if find and j <= len(sample):
+                block = temp
+            else:
+                indice = j - 1
+                break
+            if j == len(sample):
+                # print(temp)
+                indice = j
+                block = temp
+                break
+        # print('indice:', indice)
+        # print('i:', i)
+        result_blocks.append(' '.join(block))
+        if i == indice:
+            i += 1
+        else:
+            i = indice
+    # print('result_blocks', result_blocks)
+    nornalime_vf_list = cal_values_tf2(result_blocks, KB)
+    # print('nornalime_vf_list:', nornalime_vf_list)
+
+    # determine anchors
+    anchors = determinte_anchor(nornalime_vf_list, threshold)
+
+    # print('b_end0 %f s' % (b_end2 - start))
 
     return result_blocks, anchors
 
@@ -544,6 +615,7 @@ def determinte_anchor(label_dict, threshold):
         labels.append(label)
     return labels
 
+
 # 输入是dict: {'Author': 0.0, 'Volume': 0.0, 'Year': 0.0, 'Pages': 0.0, 'Title': 0.0, 'Journal': 0.00062}
 def nornalime_vf(vf_dict):
     vf_sum = sum(vf_dict.values())
@@ -587,6 +659,7 @@ def re_block(blocks, anchors):
 
 
 if __name__ == '__main__':
+    start = time.clock()
     # load Knowledge base
     author_fp = '../dataset_workshop/lower_linked_authors_no_punctuation.txt'
     title_fp = '../dataset_workshop/lower_temp_titles_kb.txt'
@@ -596,78 +669,54 @@ if __name__ == '__main__':
     pages_fp = '../dataset_workshop/temp_page_kb.txt'
     KB = loadKB2(title_fp=title_fp, author_fp=author_fp, journal_fp=journal_fp, year_fp=year_fp, volume_fp=volume_fp, pages_fp=pages_fp)
     print('Building KB over!')
+    end0 = time.clock()
+    print("time consuming: %f s" % (end0 - start))
 
     # l2 = [['Mathematics', 'and', 'Computers', 'in', 'Simulation']]
     p1 = 'Tao Ren, Yi-fan  Wang,Miao-miao Liu,Cai-juan Li and Yi-yang Liu,Mathematics and Computers in Simulation,Telematics and Informatics,2015,32,141-157'
     p12 = 'Tao Ren,Yi-fan Wang,Miao-miao Liu,Cai-juan Li , meng hu, Mathematics and Computers in Simulation,Telematics and Informatics,2015,32,141-157'
     p2 = 'Mathematics and Computers in Simulation,Jayaram Bhasker,Shi-Xia Liu,meng hu,Isospectral-like flows and eigenvalue problem, 2014'
     p3 = 'Nuno Sepúlveda,Carlos Daniel Paulino,Carlos Penha Gonçalves,Bayesian analysis of allelic penetrance models for complex binary traits.,Computational Statistics & Data Analysis,2009,53,1271-1283'
-    l1 = 'Jie Zhu, Wei Jiang, An Liu, Guanfeng Liu, Jiajie Xu and Lei Zhao,  Time-dependent Popular Routes Based Trajectory Outlier Detection, The 16th Web Information System Engineering (WISE), 2015, 32(2), 16-30'
+    l1 = 'Jie Zhu, Wei Jiang, An Liu, Guanfeng Liu, Jiajie Xu and Lei Zhao,  Time-dependent Popular Routes Based Trajectory Outlier Detection, WISE, 2015, 32(2), 16-30'
+    l2 = 'Towards Effective Indexing for Large Video Sequence Data, H. T. Shen, B. C. Ooi, X. Zhou and Z. Huang, SIGMOD, 2005, 123-125, 7(10)'
 
-    p4 = 'Acta Inf.,Nathan Goodman and Oded Shmueli,NP-complete Problems Simplified on Tree Schemas.,20,1983,171-178'
+    p4 = 'Another Polynomial Homomorphism,Robert T. Moenck,Acta Inf,1976,6(4),153-169'
     p5 = 'Acta Inf,Nathan Goodman and Oded Shmueli,NP-complete Problems Simplified on Tree Schemas,20,1983,171-178'
-    p6 = 'Juha Honkala,A characterization of rational D0L power series,Acta Inf,2011,19-24,48(1)'
-    p7 = 'Explaining the Wheel Sieve,Paul Pritchard,Acta Inf,1982,17,477-485'
-    # start = time.clock()
-    # blocks, anchors = doBlock4(p4, KB, threshold=1)
-    # print(blocks)
-    # print(anchors)
+    p6 = 'Acta Inf,Robin Milner,Calculi for Interaction,707-737,33(8),1996'
+    p7 = 'Wilson System for Triple Redundancy,IJWMIP,Piotr Wojdyllo,2011,9(1),151-167'
+    p8 = 'Estimations and Optimal Designs for Two-Dimensional Haar-Wavelet Regression Models,IJWMIP,Yongge Tian,7(3),281-297,2009'
+
+
+    blocks, anchors = doBlock4(p2, KB, threshold=0.95)
+    print(blocks)
+    print(anchors)
     # # end = time.clock()
     # # print("time consuming: %f s" % (end - start))
     # re_blocks, re_anchors = re_block(blocks, anchors)
     # print(re_blocks)
-    # print(re_anchors)
-
-    blocks, anchors = doBlock4(p7, KB, threshold=0.96)
-    print(blocks)
-    print(anchors)
-    # end = time.clock()
-    # print("time consuming: %f s" % (end - start))
-    re_blocks, re_anchors = re_block(blocks, anchors)
-    print(re_blocks)
-    print(re_anchors)
-    do_blocking_result = do_blocking(re_blocks, re_anchors)
-    print(do_blocking_result)
-
-    # all_blocks= doBlock2(p1, KB)
-    # print(all_blocks)
-    # print_my_dict(all_blocks)
-    # labels, blocks = dict2list(all_blocks)
-    # print(labels)
-    # print(blocks)
-    # selectSort(p1, label=nornalime_vf_list, block=blocks)
-    # print(nornalime_vf_list)
-    # print(blocks)
-
+    # # print(re_anchors)
+    # fo = open('../testdata/temp_combined_data7.txt', 'r')
+    # lines = fo.readlines()
+    # for id_record_line in lines:
+    #         print(id_record_line.strip())
+    #         line = id_record_line.strip().split('\t')[-1]
+    #         record_id = id_record_line.strip().split('\t')[0]
     #
-    '''
-    fo = open('../dataset_workshop/temp_dataset3.txt', 'r')
-    lines = fo.readlines()
-    random.shuffle(lines)
-    for line in open('../dataset_workshop/temp_dataset3.txt', 'r'):
-        print(line.strip())
-        blocks, anchors = doBlock4(line.strip(), KB, threshold=0.8)
-        # print(blocks)
-        # print(anchors)
-        re_blocks, re_anchors = re_block(blocks, anchors)
-        print(re_blocks)
-        print(re_anchors)
-        print('--------------')
-        # if do_blocking(re_blocks, re_anchors):
-        #     for result in do_blocking(re_blocks, re_anchors):
-        #         print('result:', result)
-        do_blocking_result = do_blocking(re_blocks, re_anchors)
-        if do_blocking_result:
-            for r in do_blocking_result:
-                print('result:', r)
-        # if len_ex_Unknown(re_anchors) == 6:
-        #     for b in normal_reblock_and_relabel(re_blocks, re_anchors):
-        #         print(b)
-        # else:
-        #     print('进一步处理!')
-        print('=================================================')
-'''
-
-
-
+    #         blocks, anchors = doBlock4(line, KB, threshold=0.95)
+    #         print(blocks)
+    #         print(anchors)
+    #         # end = time.clock()
+    #         # print("time consuming: %f s" % (end - start))
+    #         re_blocks, re_anchors = re_block(blocks, anchors)
+    #         print(re_blocks)
+    #         print(re_anchors)
+    #         # end2 = time.clock()
+    #         # print("time consuming: %f s" % (end2 - end))
+    #         if len_Unknown(re_anchors):
+    #             for result in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT)):
+    #                 print('result:', result)
+    #         else:
+    #             print((re_blocks, re_anchors))
+    #         # end3 = time.clock()
+    #         # print("time consuming: %f s" % (end3 - end2))
 

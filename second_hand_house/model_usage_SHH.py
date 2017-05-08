@@ -1,48 +1,25 @@
 import tensorflow as tf
-from second_hand_house.toolbox import *
-from second_hand_house.hello import *
+from SHH_testdata.generate_dataset import *
+from publication.tools import *
 
+ANCHOR_THRESHOLD_VALUE = 0.95
+result_output = open('shh_temp_combined_data_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.txt', 'w+')
+result_json_output = open('shh_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
 
-l = "急租 盘蠡新村 精装2室 轻轨口 家电齐全 拎包入住#41212770#2015年03月26日#1700元/月#付3押1#2室2厅1卫#整租#普通住宅#精装修#" \
-    "80平米#南北#5/5#水香七村#苏州-吴中-龙西#床空调电视冰箱洗衣机热水器宽带可做饭独立卫生间阳台#鲍张洋#137 7191 7123#万腾房产#先奇店#" \
-    "http://su.zu.anjuke.com/fangyuan/41212770?from=Filter_1"
-y_test = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
-des = '#房源亮点1、此房为5/5层2室2厅1卫，2房朝南二个房间和客厅都有空调（共3个空调），温馨装修，干净清爽，布艺沙发，液晶电视，独立卧室，独立厨卫，房间都带有窗；2、自住精装修，品牌家具家电，温馨格局，色调柔和，拎包入住；3、现在空关出租，找爱干净的朋友入住4、此房价格低于市场价格，性价比高，房东诚心出租，找爱家的人；个人介绍万腾房产（苏州）-鲍叶春倾情为您推荐随时恭候您的来电！！！24小时咨询电话：13771801606QQ/微信：13771801606'
-x = l.split('#')
-# x = l.replace('#', ' ')
-# x_raw = remove_black_space(jieba.lcut(sample_pretreatment_disperse_number2(x)))
-# print(x_raw)
+# load Knowledge base
+KB = loadKB_SHH()
 
-#
-# l3 = "急租 盘蠡新村 精装2室 轻轨口 家电齐全 拎包入住#41212770#2015年03月26日#1700元/月#付3押1#2室2厅1卫#整租#普通住宅#精装修#80平米#南北#5/5#水香七村#苏州-吴中-龙西#床空调电视冰箱洗衣机热水器宽带可做饭独立卫生间阳台#鲍张洋#137 7191 7123#万腾房产#先奇店#http://su.zu.anjuke.com/fangyuan/41212770?from=Filter_1"
-# l2 = l3.replace('#', ' ')
-#
-# r_raw2 = remove_black_space(jieba.lcut(sample_pretreatment_disperse_number2(l2)))
-# wins = build_all_windows2(' '.join(r_raw2))     # wins == x
-# print(wins)
-# print(len(wins))
-x_raw = build_all_windows2(l)
-
-# x_raw = []
-# for i in x:
-#     x_raw.append(remove_black_space(jieba.lcut(sample_pretreatment_disperse_number2(i))))
-#
-print(x_raw)
-# print(len(x_raw))
-
-
-# reload vocab
+# print("build vocab:")
+print('reload vocab:')
 vocab = load_dict('second_hand_house_complete_dict.pickle')
+pos_vocab = load_dict('pos.pickle')
+print('load vocab over!')
 
-# Parameters
-# ==================================================
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488294385/checkpoints'
-max_sample_length = 29
+fo = open('../SHH_testdata/shh_combined_data1.txt', 'r')
+lines = fo.readlines()
 
-input_samples = map_word2index(x_raw, vocab)
-print(input_samples)
-input_padding_samples = makePaddedList2(max_sample_length, input_samples, 0)
-# print(input_padding_samples)
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1494120826/checkpoints'
+max_length = 25
 
 
 # ==================================================
@@ -53,6 +30,7 @@ with graph.as_default():
         allow_soft_placement=True,
         log_device_placement=False)
     sess = tf.Session(config=session_conf)
+
     with sess.as_default():
         # Load the saved meta graph and restore variables
         saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
@@ -61,29 +39,93 @@ with graph.as_default():
 
         # Get the placeholders from the graph by name
         input_x = graph.get_operation_by_name("input_x").outputs[0]
+        input_pos = graph.get_operation_by_name("input_pos").outputs[0]
         dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
         # Tensors we want to evaluate
         loss = graph.get_operation_by_name("output/scores").outputs[0]
-        predictions = graph.get_operation_by_name("output/predictions").outputs[0]
+        cnn_predictions = graph.get_operation_by_name("output/predictions").outputs[0]
 
-        feed_dict = {
-            input_x: input_padding_samples,
-            dropout_keep_prob: 1.0,     # set 0.5 at train step
-        }
+        print('Reading data:')
+        for id_record_line in lines:
+            print(id_record_line.strip())
+            line = id_record_line.strip().split('\t')[-1]
+            record_id = id_record_line.strip().split('\t')[0]
+            result_output.write(line.strip() + '\n')
+            blocks, anchors = doBlock5(line.strip(), KB, SECOND_HAND_HOUSE, threshold=ANCHOR_THRESHOLD_VALUE)
+            # print(blocks)
+            # print(anchors)
+            re_blocks, re_anchors = re_block(blocks, anchors)
+            print(re_blocks)
+            print(re_anchors)
+            # print('--------------')
 
-        loss = sess.run(loss, feed_dict=feed_dict)
-        print("loss:", loss)
-        softmax_loss = tf.nn.softmax(loss)
-        print("softmax loss:", sess.run(softmax_loss))
-        predictions = sess.run(predictions, feed_dict=feed_dict)
-        print("predictions:", predictions)
+            if len_Unknown2(re_anchors, SECOND_HAND_HOUSE) and len(re_anchors) >= len(SECOND_HAND_HOUSE):
+                temp_list = []
+                for r in do_blocking2(re_blocks, re_anchors, len(SECOND_HAND_HOUSE), SECOND_HAND_HOUSE):
+                    # print('result:', r)
+                    print('---------------------------')
+                    # print(r[0])
+                    # 用sample_pretreatment_disperse_number2处理一下: '105-107' ==> '1 0 5 - 1 0 7'
+                    x_raw = [sample_pretreatment_disperse_number2(x).strip() for x in r[0]]
+                    input_list = [x.lower().split() for x in x_raw]
+                    y_test = r[1]
+                    print(x_raw)
+                    print(y_test)
 
-    # if y_test is not None:
-    #     correct_predictions = float(sum(predictions == y_test))
-    #     print("Total number of test examples: {}".format(len(y_test)))
-    #     Accuracy = correct_predictions/float(len(y_test))
-    #     print("Accuracy:", Accuracy)
-        # save result
-        # print(str(i) + '   ' + class_dict.get(i))
-        # result_path = 'result/'+class_dict.get(i)+'_result_ont-hot.txt'
-        # save_experiment_result_secondhand2(result_path, x_raw, y_test, predictions, Accuracy)
+                    # build input_x padding
+                    input_samples = map_word2index(input_list, vocab)
+                    # print(input_samples)
+                    input_padding_samples = makePaddedList2(max_length, input_samples, 0)
+                    # build pos padding
+                    input_pad = makePosFeatures(input_list)
+                    # print(input_pad)
+                    pos_raw = map_word2index(input_pad, pos_vocab)
+                    input_pos_padding = makePaddedList2(max_length, pos_raw, 0)
+
+                    feed_dict = {
+                        input_x: input_padding_samples,
+                        input_pos: input_pos_padding,
+                        dropout_keep_prob: 1.0,     # set 0.5 at train step
+                    }
+                    loss = sess.run(loss, feed_dict=feed_dict)
+                    # print("loss:", loss)
+                    softmax_loss = sess.run(tf.nn.softmax(loss))
+                    print("softmax loss:", softmax_loss)
+
+                    g_predictions, g_loss_max = greddy_predictions(softmax_loss, np.arange(len(softmax_loss[0])))
+                    print('g_prediction:', g_predictions)
+                    print('g_loss_max:', g_loss_max)
+                    g_score = sess.run(tf.reduce_sum(g_loss_max))
+                    print('g_score:', g_score)
+
+                    temp_list.append([(r[0], r[1], g_predictions), g_score])
+
+                    loss = graph.get_operation_by_name("output/scores").outputs[0]
+                    cnn_predictions = graph.get_operation_by_name("output/predictions").outputs[0]
+                print('max score result:')
+                result = max_tensor_score(temp_list, sess)
+                result_output.write(' || '.join(result[0]) + '\n')
+                result_output.write('[' + ', '.join(result[1]) + ']' + '\n')
+                result_output.write('[' + ', '.join(result[2]) + ']' + '\n')
+                result_output.write('\n')
+                result_output.write('\n')
+
+                # save the result to .json file
+                save2json(record_id, result_json_output, result[0], result[1], result[2])
+            else:
+                dict_prediction = lambda x: SECOND_HAND_HOUSE.get(x)
+                dict_predictions = [str(dict_prediction(an)) for an in re_anchors]
+
+                result_output.write(' || '.join(re_blocks) + '\n')
+                result_output.write('[' + ', '.join(re_anchors) + ']' + '\n')
+                result_output.write('[' + ', '.join(dict_predictions) + ']' + '\n')
+                result_output.write('\n')
+                result_output.write('\n')
+
+                # save the result to .json file
+                save2json(record_id, result_json_output, re_blocks, re_anchors, dict_predictions)
+
+            print("###############################################")
+
+result_output.close()
+result_json_output.close()

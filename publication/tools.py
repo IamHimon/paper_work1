@@ -1,5 +1,9 @@
 from second_hand_house.toolbox import *
 import tensorflow as tf
+import json
+
+
+LABEL_DICT = {'Title': 0, 'Author': 1, 'Journal': 2, 'Year': 3, 'Volume': 4, 'Pages': 5}
 
 
 def max_tensor_score(temp_list, sess):
@@ -113,7 +117,21 @@ def max_score(l):
             result = (s[0], s[1])
     return result
 
+
+# save result in .json
+def save2json(record_id, output, blocks, labels, predictions):
+    result = {'ID': record_id, 'blocks': blocks, 'labels': labels, 'predictions': predictions}
+    json.dump(result, output, ensure_ascii=False)
+    output.write('\n')
+
+
 if __name__ == '__main__':
+    json_output = open('test2.json', 'w+')
+    blocks = ['wilson', 'system for triple redundancy', 'ijwmip', 'piotr', 'wojdyllo', '2011', '9(1)', '151-167']
+    labels = ['Title', 'Journal', 'Author', 'Year', 'Volume', 'Pages']
+    predictions = ['1', '0', '2', '3', '4', '5']
+    save2json(2, json_output, blocks, labels, predictions)
+    json_output.close()
     # build_volume_dataset4train()
     # for i in range(0, 10, 2):
     #     print(i)
@@ -126,9 +144,9 @@ if __name__ == '__main__':
     # pages = load_pages('../dataset_workshop/temp_page.txt_kb')
     # print(pages)
     # build_complete_vocab()
-    result = (['josip zoric', 'connecting business models with service platform designs: exploiting potential of scenario modeling.', 'telematics and informatics', '2011', '28', '40-54'], ['Author', 'Title', 'Journal', 'Year', 'Volume', 'Pages'], [1, 0, 2, 3, 5, 5])
-
-    print(' || '.join(result[0]))
-    print('[' + ', '.join(result[1]) + ']')
-    pre = [str(x) for x in result[2]]
-    print('[' + ', '.join(pre) + ']')
+    # result = (['josip zoric', 'connecting business models with service platform designs: exploiting potential of scenario modeling.', 'telematics and informatics', '2011', '28', '40-54'], ['Author', 'Title', 'Journal', 'Year', 'Volume', 'Pages'], [1, 0, 2, 3, 5, 5])
+    #
+    # print(' || '.join(result[0]))
+    # print('[' + ', '.join(result[1]) + ']')
+    # pre = [str(x) for x in result[2]]
+    # print('[' + ', '.join(pre) + ']')

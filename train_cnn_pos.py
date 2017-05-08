@@ -12,6 +12,9 @@ class TrainCNN_POS(object):
         g = tf.Graph()
         with g.as_default():
             session_conf = tf.ConfigProto(
+                # device_count={"CPU": 4}, # limit to num_cpu_core CPU usage
+                # inter_op_parallelism_threads = 1,
+                # intra_op_parallelism_threads = 1,
                 allow_soft_placement=True,
                 log_device_placement=False)
             self.sess = tf.Session(config=session_conf)
@@ -137,7 +140,7 @@ class TrainCNN_POS(object):
                     print("\nEvaluation:")
                     # test_length = 2000
                     # if int(len(w_te)/10) < 2000:
-                    test_length = int(len(w_te)/5)
+                    test_length = int(len(w_te)/10)
                     self.test_step(w_te[0:test_length], p_te[0:test_length], y_te[0:test_length], writer=self.dev_summary_writer)
                     print("")
                 if current_step % checkpoint_every == 0:
