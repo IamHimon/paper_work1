@@ -77,7 +77,6 @@ print(s_y_train.shape)
 print('label_dict_size:', label_dict_size)
 
 
-
 embedding_dim = 50
 pos_emb_dim = 20
 # ===================================

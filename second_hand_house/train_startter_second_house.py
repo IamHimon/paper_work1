@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 from second_hand_house.toolbox import *
 import pymysql
 import jieba
@@ -35,7 +37,7 @@ try:
         # sql = "SELECT 标题,房源编号,发布时间, 租金,押付方式,户型, 租凭方式,房屋类型," \
         #       "装修,面积,朝向,楼层,小区, 位置,配置,联系人,联系方式,公司,店面, URL FROM anjuke WHERE id < 10000"
         sql = "SELECT 标题,发布时间, 租金,押付方式,户型," \
-                "面积,楼层,配置 FROM anjuke WHERE id < 20000"
+                "面积,楼层,配置 FROM anjuke WHERE id < 200"
         cursor2.execute(sql)
         result = cursor2.fetchall()
         for row in result:
@@ -64,12 +66,16 @@ finally:
 #        areas+orientations+floors+residential_areas+locations+configurations+contact_persons+phone_numbers+companies+\
 #         storefronts+describes+urls
 
+# print(titles)
+
 x_text = titles + publish_times + rents + charge_methods + rental_models + units + house_types + areas + floors + configurations + phone_numbers
+print(x_text)
 print("Loading data over!")
 max_sample_length = max([len(x) for x in x_text])
 # max_sample_length = 100
 print("max_document_length:", max_sample_length)
 # print(x_text)
+
 
 # tag
 pos_tag_list = makePosFeatures(x_text)
@@ -152,7 +158,7 @@ for train_indices, test_indices in k_fold:
 
 
 
-'''
+
 embedding_dim = 100
 # ===================================
 print("Start to train:")
@@ -170,4 +176,3 @@ for train_indices, test_indices in k_fold:
     w_tr, w_te = s_w_train[train_indices], s_w_train[test_indices]
     y_tr, y_te = s_y_train[train_indices], s_y_train[test_indices]
     train.cnn_train_onehot(w_tr, w_te, y_tr, y_te)
-'''

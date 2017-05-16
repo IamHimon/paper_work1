@@ -140,7 +140,8 @@ class TrainCNN_POS(object):
                     print("\nEvaluation:")
                     # test_length = 2000
                     # if int(len(w_te)/10) < 2000:
-                    test_length = int(len(w_te)/10)
+                    # test_length = int(len(w_te)/10) # shh
+                    test_length = len(w_te)  # uc
                     self.test_step(w_te[0:test_length], p_te[0:test_length], y_te[0:test_length], writer=self.dev_summary_writer)
                     print("")
                 if current_step % checkpoint_every == 0:

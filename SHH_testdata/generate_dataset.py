@@ -11,7 +11,7 @@ def write_set(filename, my_set):
     fw.close()
 
 
-def loadKB_SHH():
+def loadKB_SHH(COUNT=10000):
     titles = set()
     publish_times = set()
     rents = set()
@@ -25,7 +25,7 @@ def loadKB_SHH():
 
         with connection.cursor() as cursor2:
             sql = "SELECT 标题,发布时间, 租金,押付方式,户型," \
-                    "面积,楼层,配置 FROM anjuke WHERE id < 10000"
+                    "面积,楼层,配置 FROM anjuke WHERE id < %d" % COUNT
             cursor2.execute(sql)
             result = cursor2.fetchall()
             for row in result:
@@ -136,6 +136,6 @@ def build_dataset():
     xml_write.close()
 
 if __name__ == '__main__':
-    # KB = loadKB_SHH()
-    # print(KB)
-    build_dataset()
+    KB = loadKB_SHH()
+    print(KB)
+    # build_dataset()

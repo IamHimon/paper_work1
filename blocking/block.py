@@ -91,6 +91,21 @@ def loadKB2(author_fp, title_fp, journal_fp, year_fp, volume_fp, pages_fp):
     years = load_year4KB(year_fp)
     volumes = load_volume4KB(volume_fp)
     pages = load_pages4KB(pages_fp)
+
+    print('title lenth:', len(titles))
+    print('authors length:', len(authors))
+    print('journals length:', len(journals))
+    print('years length:', len(years))
+    print('volumes length:', len(volumes))
+    print('pages length:', len(pages))
+
+    # # save
+    # all_kb = titles + authors + journals + years + volumes + pages
+    # w = open('knowledege_base.txt', 'w')
+    # for k in all_kb:
+    #     w.write(k + '\n')
+    # w.close()
+
     KB = {'Title': titles, 'Author': authors, 'Journal': journals, 'Year': years, 'Volume': volumes, 'Pages': pages}
     return KB
 
@@ -507,9 +522,9 @@ def doBlock5(sample, KB, DICT, threshold):
             i += 1
         else:
             i = indice
-    # print('result_blocks', result_blocks)
-    nornalime_vf_list = cal_values_tf2(result_blocks, KB)
-    # print('nornalime_vf_list:', nornalime_vf_list)
+    print('result_blocks', result_blocks)
+    nornalime_vf_list = cal_values_tf3(result_blocks, KB)
+    print('nornalime_vf_list:', nornalime_vf_list)
 
     # determine anchors
     anchors = determinte_anchor(nornalime_vf_list, threshold)
@@ -591,6 +606,29 @@ def cal_values_tf2(block_list, KB):
         nornalime_vf_list.append(vf_dict)
     return nornalime_vf_list
 
+
+# FOR USED CAR
+def cal_values_tf3(block_list, KB):
+    nornalime_vf_list = []
+    for block in block_list:
+        # print('block:', block)
+        temp_dict = {}
+        for key in KB.keys():
+            value_count = 0
+            for value in KB[key]:
+                if my_in(block, value):
+                    value_count += 1
+            # print('%s : %d' % (key, value_count))
+            if value_count != 0:
+                vf = float('%.5f' % (value_count / len(KB[key])))
+            else:
+                vf = 0.0
+            temp_dict[key] = vf
+        # print(temp_dict)
+        vf_dict = nornalime_vf(temp_dict)
+        # print(vf_dict)
+        nornalime_vf_list.append(vf_dict)
+    return nornalime_vf_list
 
 #已知dict的value,求对应的key
 def get_keys(my_dict, value):
@@ -687,14 +725,18 @@ if __name__ == '__main__':
     p8 = 'Estimations and Optimal Designs for Two-Dimensional Haar-Wavelet Regression Models,IJWMIP,Yongge Tian,7(3),281-297,2009'
 
 
-    blocks, anchors = doBlock4(p2, KB, threshold=0.95)
+    blocks, anchors = doBlock4(l1, KB, threshold=0.95)
     print(blocks)
     print(anchors)
-    # # end = time.clock()
-    # # print("time consuming: %f s" % (end - start))
-    # re_blocks, re_anchors = re_block(blocks, anchors)
-    # print(re_blocks)
-    # # print(re_anchors)
+    end = time.clock()
+    print("time consuming: %f s" % (end - end0))
+    re_blocks, re_anchors = re_block(blocks, anchors)
+    print(re_blocks)
+    print(re_anchors)
+    for result in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT), LABEL_DICT):
+        print('result:', result)
+    end2 = time.clock()
+    print("time consuming: %f s" % (end2 - end0))
     # fo = open('../testdata/temp_combined_data7.txt', 'r')
     # lines = fo.readlines()
     # for id_record_line in lines:

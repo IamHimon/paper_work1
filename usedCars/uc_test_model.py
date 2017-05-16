@@ -1,23 +1,24 @@
 from SHH_testdata.generate_dataset import *
 import tensorflow as tf
 from publication.tools import *
+from blocking.block import *
+from usedCars.tools import *
 
 ANCHOR_THRESHOLD_VALUE = 1
-KB = loadKB_SHH()
+
+KB = load_kb_us()
 
 # print("build vocab:")
 print('reload vocab:')
-vocab = load_dict('second_hand_house_complete_dict.pickle')
+vocab = load_dict('used_car_complete_dict.pickle')
 pos_vocab = load_dict('pos.pickle')
 print('load vocab over!')
 
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1494120826/checkpoints'
-max_length = 25
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1494942170/checkpoints'
+max_length = 21
 
 # ==================================================
 checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
-print(checkpoint_file)
-print("test")
 
 graph = tf.Graph()
 with graph.as_default():
@@ -46,24 +47,28 @@ with graph.as_default():
 
             print('Reading data:')
             # for line in lines:
-            line = '[ 我 爱 我家 全优 房源 ] 金枫苑 ， 精装 2 房 ， 自 住 ， 首次 出 ...,2015 年 03 月 16 日,2800 元 / 月,面议,1 室 2 厅 1 卫,71 平米,1 / 15,床 空调 电视 冰箱 洗衣机 热水器 宽带 地铁 信息 ： 紧邻 1 号线 滨河路 站'
-            print(line.strip())
-            blocks, anchors = doBlock5(line, KB, SECOND_HAND_HOUSE, threshold=ANCHOR_THRESHOLD_VALUE)
+            # line = '[ 我 爱 我家 全优 房源 ] 金枫苑 ， 精装 2 房 ， 自 住 ， 首次 出 ...,2015 年 03 月 16 日,2800 元 / 月,面议,1 室 2 厅 1 卫,71 平米,1 / 15,床 空调 电视 冰箱 洗衣机 热水器 宽带 地铁 信息 ： 紧邻 1 号线 滨河路 站'
+            line = '2016 Mazda 3 Sedan Touring,$29335,BN Series Touring Sedan 4dr SKYACTIV-Drive 6sp 2.0i [May],0,Soul Red,6 speed Automatic,4 doors 5 seats Sedan,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,5.7 (L/100km)'
+            line2 ='2017 Subaru Impreza Hatch 2.0i,$25190,G5 2.0i Hatchback 5dr CVT 7sp AWD [MY17],0,Crystal White,7 speed Automatic,5 doors 5 seats Hatch,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,6.6 (L/100km)'
+            l2 = '2016 Mazda 3 Sedan Touring'
+            l3 = '$29335'
+            blocks, anchors = doBlock5(line2, KB, USED_CAR_DICT, threshold=0.95)
             print(blocks)
             print(anchors)
             re_blocks, re_anchors = re_block(blocks, anchors)
             print(re_blocks)
             print(re_anchors)
-            # print('--------------')
-            if len_Unknown(re_anchors) and len(re_anchors) >= len(SECOND_HAND_HOUSE):
+
+            if len_Unknown2(re_anchors, USED_CAR_DICT) and len(re_anchors) >= len(USED_CAR_DICT):
                 temp_list = []
-                for r in do_blocking2(re_blocks, re_anchors, len(SECOND_HAND_HOUSE), SECOND_HAND_HOUSE):
+                for r in do_blocking2(re_blocks, re_anchors, len(USED_CAR_DICT), USED_CAR_DICT):
                     print('result:', r)
                     print('---------------------------')
                     # print(r[0])
                     # 用sample_pretreatment_disperse_number2处理一下: '105-107' ==> '1 0 5 - 1 0 7'
                     x_raw = [sample_pretreatment_disperse_number2(x).strip() for x in r[0]]
                     input_list = [x.split() for x in x_raw]
+                    print(input_list)
                     y_test = r[1]
                     print(x_raw)
                     print(y_test)
@@ -89,12 +94,12 @@ with graph.as_default():
                     softmax_loss = sess.run(tf.nn.softmax(loss))
                     print("softmax loss:", softmax_loss)
 
-                    # cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
-                    # print("predictions:", cnn_predictions)
-                    # loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
-                    # print('loss_max:', sess.run(loss_max))
-                    # score = tf.reduce_sum(loss_max)
-                    # print('score:', sess.run(score))
+                    cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
+                    print("predictions:", cnn_predictions)
+                    loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
+                    print('loss_max:', sess.run(loss_max))
+                    score = tf.reduce_sum(loss_max)
+                    print('score:', sess.run(score))
 
                     g_predictions, g_loss_max = greddy_predictions(softmax_loss, np.arange(len(softmax_loss[0])))
                     print('g_prediction:', g_predictions)
@@ -128,7 +133,7 @@ with graph.as_default():
             else:
                 print(' || '.join(re_blocks) + '\n')
                 print('[' + ', '.join(re_anchors) + ']' + '\n')
-                dict_label = lambda x: LABEL_DICT.get(x)
+                dict_label = lambda x: USED_CAR_DICT.get(x)
                 dict_labels = [dict_label(an) for an in re_anchors]
                 print(re_blocks)
                 print(re_anchors)

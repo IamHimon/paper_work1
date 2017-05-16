@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 import re
 import pymysql
 import jieba

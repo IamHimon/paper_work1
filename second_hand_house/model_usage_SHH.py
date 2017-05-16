@@ -1,13 +1,15 @@
+import sys
+sys.path.append('..')
 import tensorflow as tf
 from SHH_testdata.generate_dataset import *
 from publication.tools import *
 
-ANCHOR_THRESHOLD_VALUE = 0.95
-result_output = open('shh_temp_combined_data_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.txt', 'w+')
-result_json_output = open('shh_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
+ANCHOR_THRESHOLD_VALUE = 0.8
+# result_output = open('1000_shh_temp_combined_data_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.txt', 'w+')
+result_json_output = open('1000_shh_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
 
 # load Knowledge base
-KB = loadKB_SHH()
+KB = loadKB_SHH(1000)
 
 # print("build vocab:")
 print('reload vocab:')
@@ -50,7 +52,6 @@ with graph.as_default():
             print(id_record_line.strip())
             line = id_record_line.strip().split('\t')[-1]
             record_id = id_record_line.strip().split('\t')[0]
-            result_output.write(line.strip() + '\n')
             blocks, anchors = doBlock5(line.strip(), KB, SECOND_HAND_HOUSE, threshold=ANCHOR_THRESHOLD_VALUE)
             # print(blocks)
             # print(anchors)
@@ -104,11 +105,6 @@ with graph.as_default():
                     cnn_predictions = graph.get_operation_by_name("output/predictions").outputs[0]
                 print('max score result:')
                 result = max_tensor_score(temp_list, sess)
-                result_output.write(' || '.join(result[0]) + '\n')
-                result_output.write('[' + ', '.join(result[1]) + ']' + '\n')
-                result_output.write('[' + ', '.join(result[2]) + ']' + '\n')
-                result_output.write('\n')
-                result_output.write('\n')
 
                 # save the result to .json file
                 save2json(record_id, result_json_output, result[0], result[1], result[2])
@@ -116,16 +112,9 @@ with graph.as_default():
                 dict_prediction = lambda x: SECOND_HAND_HOUSE.get(x)
                 dict_predictions = [str(dict_prediction(an)) for an in re_anchors]
 
-                result_output.write(' || '.join(re_blocks) + '\n')
-                result_output.write('[' + ', '.join(re_anchors) + ']' + '\n')
-                result_output.write('[' + ', '.join(dict_predictions) + ']' + '\n')
-                result_output.write('\n')
-                result_output.write('\n')
-
                 # save the result to .json file
                 save2json(record_id, result_json_output, re_blocks, re_anchors, dict_predictions)
 
             print("###############################################")
 
-result_output.close()
 result_json_output.close()
