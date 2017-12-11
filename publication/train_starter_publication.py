@@ -40,7 +40,7 @@ print('pos_vocab_size:', pos_vocab_size)
 p_train_raw = map_word2index(pos_tag_list, pos_vocab)
 P_train = np.array(makePaddedList2(max_sample_length, p_train_raw, 0))     # shape(13035, 98)
 print(P_train.shape)
-# print(P_train[0])
+print(P_train[0])
 # print(P_train[1])
 
 # print("build vocab:")
@@ -53,7 +53,7 @@ w_train_raw = map_word2index(x_text, vocab)
 w_train = np.array(makePaddedList2(max_sample_length, w_train_raw, 0))
 # print(w_train)
 print("w_train shape:", w_train.shape)
-# print(w_train[0])
+print(w_train[0])
 print("preparing w_train over!")
 
 print(w_train.shape)
@@ -77,24 +77,24 @@ print(s_y_train.shape)
 print('label_dict_size:', label_dict_size)
 
 
-embedding_dim = 50
-pos_emb_dim = 20
-# ===================================
-print("Start to train:")
-print("Initial TrainCNN: ")
-train = TrainCNN_POS(
-                 vocab_size=vocab_size,
-                 embedding_dim=embedding_dim,   # 词向量维度,或者embedding的维度
-                 pos_vocab_size=pos_vocab_size,
-                 pos_emb_dim=pos_emb_dim,
-                 sequence_length=max_sample_length,     # padding之后的句子长度
-                 num_classes=label_dict_size,
-                 )
-# Split train/test set, use 10_fold cross_validation
-print("k_fold train:")
-k_fold = KFold(len(s_w_train), n_folds=5)
-for train_indices, test_indices in k_fold:
-    w_tr, w_te = s_w_train[train_indices], s_w_train[test_indices]
-    p_tr, p_te = p_w_train[train_indices], p_w_train[test_indices]
-    y_tr, y_te = s_y_train[train_indices], s_y_train[test_indices]
-    train.cnn_train_pos(w_tr, w_te, p_tr, p_te, y_tr, y_te)
+# embedding_dim = 50
+# pos_emb_dim = 20
+# # ===================================
+# print("Start to train:")
+# print("Initial TrainCNN: ")
+# train = TrainCNN_POS(
+#                  vocab_size=vocab_size,
+#                  embedding_dim=embedding_dim,   # 词向量维度,或者embedding的维度
+#                  pos_vocab_size=pos_vocab_size,
+#                  pos_emb_dim=pos_emb_dim,
+#                  sequence_length=max_sample_length,     # padding之后的句子长度
+#                  num_classes=label_dict_size,
+#                  )
+# # Split train/test set, use 10_fold cross_validation
+# print("k_fold train:")
+# k_fold = KFold(len(s_w_train), n_folds=5)
+# for train_indices, test_indices in k_fold:
+#     w_tr, w_te = s_w_train[train_indices], s_w_train[test_indices]
+#     p_tr, p_te = p_w_train[train_indices], p_w_train[test_indices]
+#     y_tr, y_te = s_y_train[train_indices], s_y_train[test_indices]
+#     train.cnn_train_pos(w_tr, w_te, p_tr, p_te, y_tr, y_te)

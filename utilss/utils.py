@@ -158,12 +158,12 @@ def makePosFeatures(sent_contents):
     """
     pos_tag_list = []
     for sent in sent_contents:
-        # print(sent)
+        print(sent)
 
         pos_tag = nltk.pos_tag(sent)
-        # print(pos_tag)
+        print(pos_tag)
         pos_tag = list(zip(*pos_tag))[1]    # 拆开pos_tag
-        # print(pos_tag)
+        print(pos_tag)
         pos_tag_list.append(pos_tag)
     return pos_tag_list
 
@@ -619,7 +619,15 @@ def build_y_train_publication(titles_contents, authors_contents, journals_conten
 
 
 if __name__ == '__main__':
-    print('he.he.'.strip('.'))
+    sentence = 'Mercedes-Benz E250 Auto  $84888  Obsidian Black  7 Speed Sports Auto. 2 doors 4 seat Coupe  4 Cylinder Petrol Turbo Intercooled 2.0L  6L / 100km'
+    text = nltk.word_tokenize(sentence)
+    print(nltk.pos_tag(text))
+
+    # sents = sentence.split()
+    # print(sents)
+    # result = makePosFeatures(sents)
+    # # print(sents)
+    # print(result)
     # j = load_all_journals()
     # print(j)
     # print('main')

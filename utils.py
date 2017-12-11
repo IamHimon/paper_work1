@@ -594,7 +594,7 @@ def merge_predictions(t_predictions, t_index, n_predictions, n_index):
         d += 1
     return predictions
 
-
+# 准备y矩阵,生成one-hot矩阵
 def build_y_train_publication(titles_contents, authors_contents, journals_contents):
     print("Building label dict:")
     titles_length = len(titles_contents)

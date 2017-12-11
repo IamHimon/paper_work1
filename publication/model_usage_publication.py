@@ -21,13 +21,13 @@ pages_fp = '../dataset_workshop/temp_page_kb.txt'
 
 KB = loadKB2(title_fp=title_fp, author_fp=author_fp, journal_fp=journal_fp, year_fp=year_fp, volume_fp=volume_fp, pages_fp=pages_fp)
 
-'''
-print(KB)
-knowledge_base_output = open('knowledge_base.txt', 'w+')
-for k, v in KB.items():
-    knowledge_base_output.write(k + '\n')
-    for i in v:
-        knowledge_base_output.write(i + '\n')
+
+# print(KB)
+# knowledge_base_output = open('knowledge_base.txt', 'w+')
+# for k, v in KB.items():
+#     knowledge_base_output.write(k + '\n')
+#     for i in v:
+#         knowledge_base_output.write(i + '\n')
 
 print('Building KB over!')
 
@@ -178,4 +178,3 @@ with graph.as_default():
 
 result_output.close()
 result_json_output.close()
-'''

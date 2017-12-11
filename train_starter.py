@@ -139,8 +139,8 @@ print(s_j_tf_train.shape)
 
 
 # ===================================
-print("Start to train:")
-print("Initial TrainCNN: ")
+# print("Start to train:")
+# print("Initial TrainCNN: ")
 train = TrainCNN(whether_word2vec=whether_word2vec,
                  whether_tf=whether_tf,
                  vocab_size=vocab_size,

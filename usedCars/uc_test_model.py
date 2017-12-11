@@ -10,12 +10,13 @@ KB = load_kb_us()
 
 # print("build vocab:")
 print('reload vocab:')
-vocab = load_dict('used_car_complete_dict.pickle')
+vocab = load_dict('uc_complete_dict.pickle')
 pos_vocab = load_dict('pos.pickle')
 print('load vocab over!')
 
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1494942170/checkpoints'
-max_length = 21
+# checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1494942170/checkpoints'
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1495079056/checkpoints'
+max_length = 27
 
 # ==================================================
 checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
@@ -49,10 +50,10 @@ with graph.as_default():
             # for line in lines:
             # line = '[ 我 爱 我家 全优 房源 ] 金枫苑 ， 精装 2 房 ， 自 住 ， 首次 出 ...,2015 年 03 月 16 日,2800 元 / 月,面议,1 室 2 厅 1 卫,71 平米,1 / 15,床 空调 电视 冰箱 洗衣机 热水器 宽带 地铁 信息 ： 紧邻 1 号线 滨河路 站'
             line = '2016 Mazda 3 Sedan Touring,$29335,BN Series Touring Sedan 4dr SKYACTIV-Drive 6sp 2.0i [May],0,Soul Red,6 speed Automatic,4 doors 5 seats Sedan,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,5.7 (L/100km)'
-            line2 ='2017 Subaru Impreza Hatch 2.0i,$25190,G5 2.0i Hatchback 5dr CVT 7sp AWD [MY17],0,Crystal White,7 speed Automatic,5 doors 5 seats Hatch,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,6.6 (L/100km)'
-            l2 = '2016 Mazda 3 Sedan Touring'
-            l3 = '$29335'
-            blocks, anchors = doBlock5(line2, KB, USED_CAR_DICT, threshold=0.95)
+            line2 ='2017 Subaru,$25190,G5 2.0i Hatchback 5dr CVT 7sp AWD [MY17],0.0,Crystal White,7 speed Automatic,5 doors 5 seats Hatch,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,6.6 (L/100km)'
+            line3 = '2015 Ford,$16490,WZ Ambiente Hatchback 5dr PwrShift 6sp 1.5i [MY15],6000.0,Candy Red,6 speed Automatic,5 doors 5 seats Hatch,4 cylinder Petrol - Unleaded ULP Aspirated AspiratedL,5.8 (L/100km)'
+            line4 = '2015 Audi,$48999,8V Cabriolet 2dr S tronic 7sp 1.4T (CoD) [MY17],4200,Mythos Black,7 speed Automatic,2 doors 4 seats Convertible,4 cylinder Petrol - Premium ULP Turbo Intercooled Turbo IntercooledL,5.1 (L/100km)'
+            blocks, anchors = doBlock5(line4, KB, USED_CAR_DICT, threshold=ANCHOR_THRESHOLD_VALUE)
             print(blocks)
             print(anchors)
             re_blocks, re_anchors = re_block(blocks, anchors)
@@ -70,9 +71,13 @@ with graph.as_default():
                     input_list = [x.split() for x in x_raw]
                     print(input_list)
                     y_test = r[1]
-                    print(x_raw)
+                    # print(x_raw)
                     print(y_test)
                     end0 = time.time()
+
+                    b = ['2015 Audi', '$48999', '8V', 'Cabriolet', '2dr S tronic 7sp 1.4T (CoD) [MY17]', '4200', 'Mythos', 'Black', '7 speed Automatic', '2 doors 4 seats Convertible', '4 cylinder Petrol - Premium ULP Turbo Intercooled Turbo IntercooledL', '5.1 (L/100km)']
+                    l = ['Brand', 'Unknown', 'Unknown', 'Unknown', 'Vehicle', 'Unknown', 'Unknown', 'Colour', 'Transmission', 'Body', 'Engine', 'Fuel Enconomy']
+
 
                     # build input_x padding
                     input_samples = map_word2index(input_list, vocab)

@@ -32,6 +32,7 @@ pages_fp = '../dataset_workshop/temp_page_kb.txt'
 KB = loadKB2(title_fp=title_fp, author_fp=author_fp, journal_fp=journal_fp, year_fp=year_fp, volume_fp=volume_fp, pages_fp=pages_fp)
 print('Building KB over!')
 
+'''
 # reload vocab
 vocab = load_dict('publication_complete_dict.pickle')
 pos_vocab = load_dict('pos.pickle')
@@ -98,7 +99,7 @@ with graph.as_default():
             # print('--------------')
             if len_Unknown(re_anchors) and len(re_anchors) >= len(LABEL_DICT):
                 temp_list = []
-                for r in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT)):
+                for r in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT), LABEL_DICT):
                     # print('result:', r)
                     print('---------------------------')
                     # print(r[0])
@@ -129,12 +130,12 @@ with graph.as_default():
                     softmax_loss = sess.run(tf.nn.softmax(loss))
                     print("softmax loss:", softmax_loss)
 
-                    # cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
-                    # print("predictions:", cnn_predictions)
-                    # loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
-                    # print('loss_max:', sess.run(loss_max))
-                    # score = tf.reduce_sum(loss_max)
-                    # print('score:', sess.run(score))
+                    cnn_predictions = sess.run(cnn_predictions, feed_dict=feed_dict)
+                    print("predictions:", cnn_predictions)
+                    loss_max = tf.reduce_max(softmax_loss, reduction_indices=1)
+                    print('loss_max:', sess.run(loss_max))
+                    score = tf.reduce_sum(loss_max)
+                    print('score:', sess.run(score))
 
                     g_predictions, g_loss_max = greddy_predictions(softmax_loss, np.arange(len(softmax_loss[0])))
                     print('g_prediction:', g_predictions)
@@ -173,3 +174,4 @@ with graph.as_default():
 
             print("###############################################")
 
+'''

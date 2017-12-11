@@ -1,0 +1,6 @@
+model_checkpoint_path: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-80600"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-79800"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-80000"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-80200"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-80400"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/second_hand_house/runs/1488245487/checkpoints/model-80600"

@@ -114,7 +114,9 @@ class TrainCNN_POS(object):
         if writer:
             writer.add_summary(summaries, step)
 
-    def cnn_train_pos(self, w_tr, w_te, p_tr, p_te, y_tr, y_te, test_every=200, checkpoint_every=200, batch_size=64, num_epoch=10,
+    #设置不同的参数, shh,pub: test_every=200, checkpoint_every=200, batch_size=64
+    # used car: test_every=20, checkpoint_every=20, batch_size=10
+    def cnn_train_pos(self, w_tr, w_te, p_tr, p_te, y_tr, y_te, test_every=20, checkpoint_every=20, batch_size=10, num_epoch=10,
                          shuffle=True):
         # Generate batches per_epoch and execute train step
         data_size = len(w_tr)
@@ -141,7 +143,7 @@ class TrainCNN_POS(object):
                     # test_length = 2000
                     # if int(len(w_te)/10) < 2000:
                     # test_length = int(len(w_te)/10) # shh
-                    test_length = len(w_te)  # uc
+                    test_length = len(w_te)  # 用多少测试集数据来做测试
                     self.test_step(w_te[0:test_length], p_te[0:test_length], y_te[0:test_length], writer=self.dev_summary_writer)
                     print("")
                 if current_step % checkpoint_every == 0:

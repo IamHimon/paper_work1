@@ -1,0 +1,6 @@
+model_checkpoint_path: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-5200"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-4400"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-4600"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-4800"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-5000"
+all_model_checkpoint_paths: "/home/himon/PycharmProjects/paper_work1/runs/1489392243/checkpoints/model-5200"

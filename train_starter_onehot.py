@@ -66,7 +66,7 @@ else:
     # embedding_dim = 100
     # embedding = np.full([vocab_size, embedding_dim], 1.0, dtype=float)
 
-'''
+
 if whether_tf:
     print("Making padding:")
     titles_contents = makePaddedList(max_sample_length, titles)
@@ -125,7 +125,7 @@ else:
     print('journal shape:', j_tf_train.shape)
     print("Building TF feature over!")
 
-'''
+
 
 y_train, label_dict_size = build_y_train_publication(titles_contents, authors_contents, journals_contents)
 

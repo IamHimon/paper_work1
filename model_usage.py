@@ -127,6 +127,7 @@ print(input_samples)
 # j_tf_sample = []
 # Evaluation
 # ==================================================
+'''
 checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
 graph = tf.Graph()
 with graph.as_default():
@@ -192,3 +193,4 @@ with graph.as_default():
 #     print(x_raw[i])
 #     print(predictions[i])
 #     print('----------------')
+'''

@@ -473,7 +473,7 @@ def doBlock4( sample, KB, threshold):
         else:
             i = indice
     # 耗时: 2.5s
-    # print('result_blocks', result_blocks)
+    print('result_blocks', result_blocks)
     nornalime_vf_list = cal_values_tf2(result_blocks, KB)
     print('nornalime_vf_list:', nornalime_vf_list)
     # 耗时: 2s
@@ -733,8 +733,8 @@ if __name__ == '__main__':
     re_blocks, re_anchors = re_block(blocks, anchors)
     print(re_blocks)
     print(re_anchors)
-    for result in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT), LABEL_DICT):
-        print('result:', result)
+    # for result in do_blocking2(re_blocks, re_anchors, len(LABEL_DICT), LABEL_DICT):
+    #     print('result:', result)
     end2 = time.clock()
     print("time consuming: %f s" % (end2 - end0))
     # fo = open('../testdata/temp_combined_data7.txt', 'r')

@@ -6,34 +6,52 @@ from publication.tools import *
 from blocking.block import *
 from usedCars.tools import *
 
-ANCHOR_THRESHOLD_VALUE = 1
+ANCHOR_THRESHOLD_VALUE = 0.84
+start = time.time()
 
-result_json_output = open('uc_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
+result_json_output = open('result/uc_sb_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
 
 # fo = open('../SHH_testdata/shh_combined_data1.txt', 'r')
 # lines = fo.readlines()
 
-filename2 = 'data/data_bmw.txt'
-records = load_car_data(filename2)
+# filename2 = 'data/data_bmw.txt'
+# records = load_car_data(filename2)
+# names = ['Brand', 'Price', 'Vehicle', 'Odometer', 'Colour', 'Transmission', 'Body', 'Engine', 'Fuel Enconomy']
+# df = pd.DataFrame(records, columns=names).dropna()
+# lines = []
+# count = 0
+# for i in df.values:
+#     count += 1
+#     # print(str(count) + '\t' + ','.join(i))
+#     lines.append(str(count) + '\t' + ','.join(i))
+
 names = ['Brand', 'Price', 'Vehicle', 'Odometer', 'Colour', 'Transmission', 'Body', 'Engine', 'Fuel Enconomy']
-df = pd.DataFrame(records, columns=names).dropna()
+
+test_df = pd.read_csv('data/test_data_split_brand.txt', names=names).dropna()
+test_df['Odometer'] = test_df['Odometer'].apply(lambda x: str(x))
+# train_df = pd.read_csv('data/train_data.txt')
+# print(test_df)
+# print(train_df)
+
+# df = pd.DataFrame(records, columns=names).dropna()
 lines = []
 count = 0
-for i in df.values:
+for i in test_df.values:
     count += 1
     # print(str(count) + '\t' + ','.join(i))
+    # record = ','.join(i)
     lines.append(str(count) + '\t' + ','.join(i))
 
 KB = load_kb_us()
 
 # print("build vocab:")
 print('reload vocab:')
-vocab = load_dict('used_car_complete_dict.pickle')
+vocab = load_dict('uc_complete_dict.pickle')
 pos_vocab = load_dict('pos.pickle')
 print('load vocab over!')
 
-checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1494942170/checkpoints'
-max_length = 21
+checkpoint_dir = '/home/himon/PycharmProjects/paper_work1/usedCars/runs/1495079056/checkpoints'
+max_length = 27
 
 # ==================================================
 checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
@@ -121,16 +139,20 @@ with graph.as_default():
                         cnn_predictions = graph.get_operation_by_name("output/predictions").outputs[0]
                     print('max score result:')
                     result = max_tensor_score(temp_list, sess)
+                    print(result)
 
                     # save the result to .json file
-                    save2json(record_id, result_json_output, result[0], result[1], result[2])
+                    # save2json(record_id, result_json_output, result[0], result[1], result[2])
                 else:
                     dict_prediction = lambda x: USED_CAR_DICT.get(x)
                     dict_predictions = [str(dict_prediction(an)) for an in re_anchors]
 
                     # save the result to .json file
-                    save2json(record_id, result_json_output, re_blocks, re_anchors, dict_predictions)
+                    # save2json(record_id, result_json_output, re_blocks, re_anchors, dict_predictions)
 
                 print("###############################################")
 
     result_json_output.close()
+
+    end = time.time()
+print("time consuming: %f s" % (end - start))

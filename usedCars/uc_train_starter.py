@@ -1,10 +1,9 @@
 import sys
 sys.path.append('..')
-from tensorflow.contrib import learn
-from publication.tools import *
 from sklearn.cross_validation import KFold
-from utils import *
 from train_cnn_pos import *
+from publication.tools import *
+from utils import *
 from usedCars.read_data import *
 from usedCars.tools import *
 
@@ -18,10 +17,15 @@ from usedCars.tools import *
 # Engine = []
 # Fuel_enconomy = []
 
-filename = 'cars5.txt'
-records = load_car_data(filename)
+# filename = 'cars5.txt'
+# filename = 'data/cars3.txt'
+# records = load_car_data(filename)
 names = ['Brand', 'Price', 'Vehicle', 'Odometer', 'Colour', 'Transmission', 'Body', 'Engine', 'Fuel Enconomy']
-df = pd.DataFrame(records, columns=names)
+# df = pd.DataFrame(records, columns=names)
+
+df = pd.read_csv('data/train_data_split_brand.txt', names=names, header=None).dropna()
+df['Odometer'] = df['Odometer'].apply(lambda x: str(x))
+
 Brand = df['Brand'].dropna().values.tolist()
 Price = df['Price'].dropna().values.tolist()
 Vehicle = df['Vehicle'].dropna().values.tolist()
@@ -31,6 +35,11 @@ Transmission = df['Transmission'].dropna().values.tolist()
 Body = df['Body'].dropna().values.tolist()
 Engine = df['Engine'].dropna().values.tolist()
 Fuel_enconomy = df['Fuel Enconomy'].dropna().values.tolist()
+# print(Brand)
+# print(Price)
+# print(Vehicle)
+# print(Odometer)
+# print(Colour)
 
 # print([b.split() for b in Odometer])
 
@@ -53,7 +62,12 @@ Engine = [remove_black_space(sample_pretreatment_disperse_number2(str(b)).split(
 Fuel_enconomy = [remove_black_space(sample_pretreatment_disperse_number2(str(b)).split()) for b in Fuel_enconomy]
 
 x_text = Brand + Vehicle + Price + Odometer + Colour + Transmission + Body + Engine + Fuel_enconomy
-print(x_text)
+# print(x_text)
+
+# vocab = makeWordList(x_text)
+# save_dict(vocab, 'uc_complete_dict.pickle')
+
+
 print("Loading data over!")
 max_sample_length = max([len(x) for x in x_text])
 print("max_document_length:", max_sample_length)
@@ -76,7 +90,7 @@ P_train = np.array(makePaddedList2(max_sample_length, p_train_raw, 0))     # sha
 print(P_train.shape)
 
 print('reload vocab:')
-vocab = load_dict('used_car_complete_dict.pickle')
+vocab = load_dict('uc_complete_dict.pickle')
 vocab_size = len(vocab)
 
 print("Preparing w_train:")
@@ -91,7 +105,7 @@ print("preparing w_train over!")
 print("Preparing y_train:")
 y_train, label_dict_size = build_y_train_used_car_all_attribute(Brand, Price, Vehicle,  Odometer, Colour, Transmission,
                                                                 Body, Engine, Fuel_enconomy)
-print(y_train)
+# print(y_train)
 print("Preparing y_train over!")
 
 # shuffle here firstly!
@@ -107,9 +121,10 @@ s_y_train = y_train[shuffle_indices]
 print('label_dict_size:', label_dict_size)
 
 
-embedding_dim = 50
+embedding_dim = 60
 pos_emb_dim = 20
 # ===================================
+
 
 print("Start to train:")
 print("Initial TrainCNN: ")
@@ -118,17 +133,16 @@ train = TrainCNN_POS(
                  embedding_dim=embedding_dim,   # 词向量维度,或者embedding的维度
                  pos_vocab_size=pos_vocab_size,
                  pos_emb_dim=pos_emb_dim,
-                 sequence_length=max_sample_length,     # padding之后的句子长度
+                 sequence_length=max_sample_length,     # padding之后的句子长度    (27)
                  num_classes=label_dict_size,
                  )
 # Split train/test set, use 10_fold cross_validation
 print("k_fold train:")
-k_fold = KFold(len(s_w_train), n_folds=10)
+k_fold = KFold(len(s_w_train), n_folds=6)
 for train_indices, test_indices in k_fold:
     w_tr, w_te = s_w_train[train_indices], s_w_train[test_indices]
     p_tr, p_te = p_w_train[train_indices], p_w_train[test_indices]
     y_tr, y_te = s_y_train[train_indices], s_y_train[test_indices]
     train.cnn_train_pos(w_tr, w_te, p_tr, p_te, y_tr, y_te)
-
 
 

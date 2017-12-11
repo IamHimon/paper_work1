@@ -4,11 +4,9 @@ import jieba
 import xml.dom.minidom
 
 
-def write_set(filename, my_set):
-    fw = open(filename, 'w+')
+def write_set(fw, my_set):
     for i in my_set:
         fw.write(i + '\n')
-    fw.close()
 
 
 def loadKB_SHH(COUNT=10000):
@@ -47,10 +45,15 @@ def loadKB_SHH(COUNT=10000):
                     configurations.add(' '.join(remove_black_space(jieba.lcut(row[7]))))
     finally:
         connection.close()
+
     KB = {'titles': titles, 'publish_time': publish_times, 'rent': rents, 'charge_method': charge_methods,
           'unit': units, 'area': areas, 'floor': floors, 'configuration': configurations}
+    #
+    # kb_write = open('shh_knowledge_base.txt', 'w+')
+    # for k, v in KB.items():
+    #     kb_write.write(k + '\n')
+    #     write_set(kb_write, v)
 
-    write_set('title_set.txt', titles)
     return KB
 
 
@@ -136,6 +139,6 @@ def build_dataset():
     xml_write.close()
 
 if __name__ == '__main__':
-    KB = loadKB_SHH()
+    KB = loadKB_SHH(100)
     print(KB)
     # build_dataset()

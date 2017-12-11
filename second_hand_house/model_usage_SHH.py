@@ -5,6 +5,7 @@ from SHH_testdata.generate_dataset import *
 from publication.tools import *
 
 ANCHOR_THRESHOLD_VALUE = 0.8
+
 # result_output = open('1000_shh_temp_combined_data_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.txt', 'w+')
 result_json_output = open('1000_shh_result_'+str(ANCHOR_THRESHOLD_VALUE)+'.json', 'w+')
 
